@@ -19,14 +19,14 @@
 
 ;; (load "dictionary.cl") ;;  real dictionary (45K words)
 
+;; encode functions
+;; includes encode ch,word and paragraph
+(load "encode.cl")
 
 ;; -----------------------------------------------------
 ;; HELPERS
-;; *** PLACE YOUR HELPER FUNCTIONS BELOW ***
-
-
 (defun spell-checker-0 (word)
-  ;you should implement this function
+  ; return t if word exist in file, otherwise nil
 )
 
 (defun spell-checker-1 (word)
@@ -38,7 +38,7 @@
 ;; DECODE FUNCTIONS
 
 (defun Gen-Decoder-A (paragraph)
-  ;you should implement this function
+  ; find decoded paragraph with brute force
 )
 
 (defun Gen-Decoder-B-0 (paragraph)
@@ -50,5 +50,7 @@
 )
 
 (defun Code-Breaker (document decoder)
-  ;you should implement this function
+  (decoder document)
 )
+
+

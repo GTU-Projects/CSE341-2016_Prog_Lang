@@ -68,8 +68,8 @@
       ((eq x 25) 'z)))
 
 ; mapcar
-(defun apply-list (fn l id)
+(defun apply-list (fn l)
     (if (null l)
        ()
-       (append (list (funcall fn (car l))) (apply-list fn (cdr l) id)) ))
+       (append (list (funcall fn (car l))) (apply-list fn (cdr l))) ))
 
