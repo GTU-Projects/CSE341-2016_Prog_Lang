@@ -17,7 +17,7 @@
 ;; this is needed for spell checking
 (load "test-dictionary.cl")
 
-;; (load "dictionary.cl") ;;  real dictionary (45K words)
+(load "dictionary.cl") ;;  real dictionary (45K words)
 
 ;; encode functions
 ;; includes encode ch,word and paragraph
@@ -27,10 +27,20 @@
 ;; HELPERS
 (defun spell-checker-0 (word)
   ; return t if word exist in file, otherwise nil
+	(dolist (item *dictionary*)
+			(write item)
+			(if (equal item word)
+				(return t)
+				())
+	)
 )
 
 (defun spell-checker-1 (word)
-  ;you should implement this function
+  ; this function checks the word is in file
+  ; uses binary search
+
+  
+  
 )
 
 
@@ -52,5 +62,7 @@
 (defun Code-Breaker (document decoder)
   (decoder document)
 )
+
+(format t "~a" (spell-checker-1 '(h e l l o)))
 
 
