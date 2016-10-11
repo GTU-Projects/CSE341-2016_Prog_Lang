@@ -39,8 +39,8 @@
   ; this function checks the word is in file
   ; uses binary search
 
-  
-  
+
+
 )
 
 
@@ -63,6 +63,9 @@
   (decoder document)
 )
 
-(format t "~a" (spell-checker-1 '(h e l l o)))
+;(format t "~a" (spell-checker-1 '(h e l l o)))
 
+
+(defparameter *alphabet* '(a b c d e f g h i j k l m n o p q r s t u v w x y z))
+(format t "~a ~%" (apply-list 'c2i *alphabet*))
 
