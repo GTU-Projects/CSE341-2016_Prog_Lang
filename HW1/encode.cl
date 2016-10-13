@@ -63,3 +63,5 @@
 )
 
 ;(test-encodes)
+
+(format t "~a~%" (encode-parag '((H e l l o)(f r o m)(t h e)(o t h e r)(s i d e))))

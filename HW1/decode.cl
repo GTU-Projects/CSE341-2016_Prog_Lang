@@ -67,5 +67,22 @@
 
 
 (defparameter *alphabet* '(a b c d e f g h i j k l m n o p q r s t u v w x y z))
+(defparameter *alphabet1* '(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))
 (format t "~a ~%" (apply-list 'c2i *alphabet*))
 
+
+
+(defun match-word(l plain chipper)
+
+	(loop for 
+		(format t "item:~a ~a ~%" item (car chipperItr))
+		(setq chipperItr (cdr chipperItr))
+
+		)
+
+
+	(format t "test:~a ~a ~a ~a " l plain chipper *my-d1*)
+
+)
+
+(match-word '(0 1 2 3) '(h e l l o) '(k q s s y))
