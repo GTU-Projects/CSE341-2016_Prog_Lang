@@ -6,7 +6,7 @@
 
 (defun get-chiper-ch (ch)
 	; takes a char, converts cipher char
-	(case ch 
+	(case ch
 		('a 'd)
 		('b 'e)
 		('c 'f)
@@ -41,11 +41,11 @@
 	))
 
 (defun encode-parag (paragraph)
-	(if (null paragraph) () 
+	(if (null paragraph) ()
 		(append (list (encode-word (car paragraph))) (encode-parag (cdr paragraph)))))
 
 (defun encode-doc (doc)
-	(if (null doc) () 
+	(if (null doc) ()
 		(append (list (encode-parag (car doc)) (encode-doc (cdr doc))))))
 
 
@@ -64,4 +64,4 @@
 
 ;(test-encodes)
 
-(format t "~a~%" (encode-parag '((H e l l o)(f r o m)(t h e)(o t h e r)(s i d e))))
+;(format t "~a~%" (encode-parag '((H e l l o)(f r o m)(t h e)(o t h e r)(s i d e))))

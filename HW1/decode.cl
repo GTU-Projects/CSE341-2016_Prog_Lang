@@ -25,24 +25,6 @@
 
 ;; -----------------------------------------------------
 ;; HELPERS
-(defun spell-checker-0 (word)
-  ; return t if word exist in file, otherwise nil
-	(dolist (item *dictionary*)
-			(write item)
-			(if (equal item word)
-				(return t)
-				())
-	)
-)
-
-(defun spell-checker-1 (word)
-  ; this function checks the word is in file
-  ; uses binary search
-
-
-
-)
-
 
 ;; -----------------------------------------------------
 ;; DECODE FUNCTIONS
@@ -66,23 +48,87 @@
 ;(format t "~a" (spell-checker-1 '(h e l l o)))
 
 
-(defparameter *alphabet* '(a b c d e f g h i j k l m n o p q r s t u v w x y z))
-(defparameter *alphabet1* '(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))
-(format t "~a ~%" (apply-list 'c2i *alphabet*))
+;(defparameter *alphabet* '(a b c d e f g h i j k l m n o p q r s t u v w x y z))
+;(defparameter *alphabet1* '(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))
+;(format t "~a ~%" (apply-list 'c2i *alphabet*))
+
+;(format t "test: ~a ~%" (rec-test '((h o t)(h e r x)(a s)(h o t)) *my-d1*))
 
 
 
-(defun match-word(l plain chipper)
+(format t "~a~%" (encode-parag '((H e l l o)(f r o m)(t h e))))
 
-	(loop for 
-		(format t "item:~a ~a ~%" item (car chipperItr))
-		(setq chipperItr (cdr chipperItr))
+(defun match-word (word startIndex)
+  (if (member word *my-d1*)
+  ;(if (equal word '(a i y t)) ; from yerine sozlukte devam edilecek index gel
+    t nil
+    ))
 
-		)
+
+(defun foo (l)
+
+  (let* ((cIndex 0)(lLength (length l))) ; sifreli eleman indexi
+    (loop
+      (let* ((cWord (nth cIndex l))(mapList (match-word cWord cIndex)))
+        (format t "Index: ~a ChipperWord : ~a~%" cIndex cWord)
+        (cond
+          ((numberp mapList) (setq cIndex (1+ cIndex)));map okey
+          (t (setq cIndex (1- cIndex)))) ; map fail
+
+        )
+
+      ;(setq cIndex (1+ cIndex))
+      (when (= cIndex lLength) (return 'a))
+      )
+    )
 
 
-	(format t "test:~a ~a ~a ~a " l plain chipper *my-d1*)
+  )
 
-)
+; (I K)  (index1 (V E))(index (A U)(T Z)(I T))
+; (I K)  yeni match edilmek istenen
+; (index1 (V E))(index (A U)(T Z)(I T)) daha onceden match edilenlerin ornek kumesi
+; I ye karsilik gelen sifre daha onceden match edilmismi bakılır
+(defun is-matched-before (matches new-match)
+  (loop for item in matches do
+    (loop for match in (rest item) do
+      (format t "new-match: ~a --  match: ~a~%" new-match match)
+      (if (equal (first match) (first new-match))
+        (return-from is-matched-before match)
+        ()))))
 
-(match-word '(0 1 2 3) '(h e l l o) '(k q s s y))
+(defun match-word (chippedWord index l matches)
+  (format t "chippedWord : ~a -- index: ~a -- matches: ~a~%" chippedWord index matches)
+  (let* ((dicList (nthcdr  index l)))
+      (format t "Dic :~a~%" dicList)
+      (loop for word in dicList do
+        (format t "word:~a ~%" word)
+        (loop for ch1 in chippedWord
+            for ch2 in word do
+          (let* ((match-val (is-matched-before matches (cons ch1 (cons ch2 nil)))))
+            ; match yoksa veya edilen kendisi degilse yeni listeye ekle
+            ; diger match durumunda nil dondur
+            (if (null match-val)
+              (format t "not anymatch~%")
+              (if (equal (first (rest match-val)) ch2)
+                (format t "matched with old value ~a~%" match-val)
+                (format t "matched with diff value ~a~%" match-val))))
+          )
+        )
+    )
+  )
+
+(match-word '(a i y t) '0 '((t h i s)(o k e y)(f r o m)) '((2 (a x)(i k))))
+
+
+
+;(format t "Test :~a~%" (foo '((K Q S S Y) (A I Y T) (M K Q))) )
+
+
+
+
+
+
+
+
+;
