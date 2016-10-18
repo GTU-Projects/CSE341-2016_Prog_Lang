@@ -58,72 +58,41 @@
 
 (format t "~a~%" (encode-parag '((H e l l o)(f r o m)(t h e))))
 
-(defun match-word (word startIndex)
-  (if (member word *my-d1*)
-  ;(if (equal word '(a i y t)) ; from yerine sozlukte devam edilecek index gel
-    t nil
-    ))
-
-
-(defun foo (l)
-
-  (let* ((cIndex 0)(lLength (length l))) ; sifreli eleman indexi
-    (loop
-      (let* ((cWord (nth cIndex l))(mapList (match-word cWord cIndex)))
-        (format t "Index: ~a ChipperWord : ~a~%" cIndex cWord)
-        (cond
-          ((numberp mapList) (setq cIndex (1+ cIndex)));map okey
-          (t (setq cIndex (1- cIndex)))) ; map fail
-
+(defun is-matched (chiperWord plainWord matchedWords)
+  (loop for chipCh in chiperWord
+    for plainCh in plainWord do
+    (format t " chipCh : ~a, plainCh : ~a~%" chipCh plainCh)
+    (loop for matched in matchedWords do
+      (loop for item in (rest matched) do
+        (cond ((equal (first item) chipCh) (format t "    matched with item~a~%" item))
+              (t (format t "   not matched with item~a~%" item)))
         )
-
-      ;(setq cIndex (1+ cIndex))
-      (when (= cIndex lLength) (return 'a))
       )
     )
-
-
   )
 
-; (I K)  (index1 (V E))(index (A U)(T Z)(I T))
-; (I K)  yeni match edilmek istenen
-; (index1 (V E))(index (A U)(T Z)(I T)) daha onceden match edilenlerin ornek kumesi
-; I ye karsilik gelen sifre daha onceden match edilmismi bakılır
-(defun is-matched-before (matches new-match)
-  (loop for item in matches do
-    (loop for match in (rest item) do
-      (format t "new-match: ~a --  match: ~a~%" new-match match)
-      (if (equal (first match) (first new-match))
-        (return-from is-matched-before match)
-        ()))))
-
-(defun match-word (chippedWord index l matches)
-  (format t "chippedWord : ~a -- index: ~a -- matches: ~a~%" chippedWord index matches)
-  (let* ((dicList (nthcdr  index l)))
-      (format t "Dic :~a~%" dicList)
-      (loop for word in dicList do
-        (format t "word:~a ~%" word)
-        (loop for ch1 in chippedWord
-            for ch2 in word do
-          (let* ((match-val (is-matched-before matches (cons ch1 (cons ch2 nil)))))
-            ; match yoksa veya edilen kendisi degilse yeni listeye ekle
-            ; diger match durumunda nil dondur
-            (if (null match-val)
-              (format t "not anymatch~%")
-              (if (equal (first (rest match-val)) ch2)
-                (format t "matched with old value ~a~%" match-val)
-                (format t "matched with diff value ~a~%" match-val))))
+; belirtilen indexten itibaren esletirmeye calis. Eslesince (2 (x y)(z y))
+; seklinde return et, eslesme yoksa nil return et
+(defun getMatchedParts (word startIndex matchedWords dictionary)
+  (format t "word: ~a, matchedWords: ~a , " word matchedWords)
+  (let* ((listLength (length dictionary)))
+    (format t "Dictionary length: ~a~%" listLength)
+    (loop ; sozluk boyutu kadar donecek
+      (let* ((matchRes (is-matched word (nth startIndex dictionary) matchedWords)))
+        (format t "~a.matchRes : ~a , word: ~a, nth: ~a ~%" startIndex matchRes word (nth startIndex dictionary))
+        (cond ((null matchRes) (setf startIndex (1+ startIndex)))
+          (t (return-from getMatchedParts matchRes) )
           )
         )
+      (when (equal startIndex listLength) (return-from getMatchedParts nil))
+      )
     )
-  )
-
-(match-word '(a i y t) '0 '((t h i s)(o k e y)(f r o m)) '((2 (a x)(i k))))
+    )
 
 
+(getMatchedParts '(a i y t) '1 '((2 (a x)(i k))) '((t h i s)(o k e y)(f r o m))  )
 
 ;(format t "Test :~a~%" (foo '((K Q S S Y) (A I Y T) (M K Q))) )
-
 
 
 
