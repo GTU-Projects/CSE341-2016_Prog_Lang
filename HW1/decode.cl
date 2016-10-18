@@ -59,15 +59,26 @@
 (format t "~a~%" (encode-parag '((H e l l o)(f r o m)(t h e))))
 
 (defun is-matched (chiperWord plainWord matchedWords)
-  (loop for chipCh in chiperWord
-    for plainCh in plainWord do
-    (format t " chipCh : ~a, plainCh : ~a~%" chipCh plainCh)
-    (loop for matched in matchedWords do
-      (loop for item in (rest matched) do
-        (cond ((equal (first item) chipCh) (format t "    matched with item~a~%" item))
-              (t (format t "   not matched with item~a~%" item)))
+  (let* ((newMatches '(()))) ; create empty list, nil
+    (loop for chipCh in chiperWord
+      for plainCh in plainWord do
+      (format t " chipCh : ~a, plainCh : ~a~%" chipCh plainCh)
+      ; TODO: burası recursive olabilir
+      (loop for matched in matchedWords do
+        (loop for item in (rest matched) do
+          (if (equal (first item) chipCh) ;sifreli eleman listede varmi
+              (if (equal (second item) plainCh); listede aynisimi var. (X U) == (X U) ise devam
+                  (format t "   same element in match list~%")
+                  (progn (format t "   match with diff element~%") (return-from is-matched nil)) ; (X U) degilde (X Z ) varsa listede daha onceden eslesmis
+                )
+            (progn
+             (format t "    ~a not matched with item~a~%" chipCh item)
+             (setq newMatches (append (list (cons chipCh (cons plainCh nil))) newMatches  ))
+             ))
+          )
         )
       )
+    newMatches
     )
   )
 
@@ -79,7 +90,7 @@
     (format t "Dictionary length: ~a~%" listLength)
     (loop ; sozluk boyutu kadar donecek
       (let* ((matchRes (is-matched word (nth startIndex dictionary) matchedWords)))
-        (format t "~a.matchRes : ~a , word: ~a, nth: ~a ~%" startIndex matchRes word (nth startIndex dictionary))
+        (format t "~a. word: ~a, nth: ~a, matchRes : ~a~%" startIndex word (nth startIndex dictionary ) matchRes)
         (cond ((null matchRes) (setf startIndex (1+ startIndex)))
           (t (return-from getMatchedParts matchRes) )
           )
@@ -90,7 +101,8 @@
     )
 
 
-(getMatchedParts '(a i y t) '1 '((2 (a x)(i k))) '((t h i s)(o k e y)(f r o m))  )
+(getMatchedParts '(a i y t) '0 '((2 (a t)(i h))) '((o k e y)(f r o m)(t h i s))  )
+
 
 ;(format t "Test :~a~%" (foo '((K Q S S Y) (A I Y T) (M K Q))) )
 
