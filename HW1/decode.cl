@@ -52,29 +52,43 @@
 ;(defparameter *alphabet1* '(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))
 ;(format t "~a ~%" (apply-list 'c2i *alphabet*))
 
-;(format t "test: ~a ~%" (rec-test '((h o t)(h e r x)(a s)(h o t)) *my-d1*))
+
+;(format t "~a~%" (encode-parag '((H e l l o)(f r o m)(t h e))))
 
 
+; word: (A C) (first: chiper last: plain)
+; list : (3 (X T)(A C))
+; eger liste icinde (A C) varsa AC return et
+; eger (A ?) varsa onu return et
+; yoksa nil return et
+(defun isUsedInList (word matchList)
+  (format t "inUsedList word:~a matchList:~a~%" word matchList)
+  (loop for matched in matchList do
+    (loop for item in (rest matched) do
+      (if (equal (first item) (first word)) ;sifreli eleman listede varmi
+            (return-from isUsedInList item)())
+      ))
+    nil)
 
-(format t "~a~%" (encode-parag '((H e l l o)(f r o m)(t h e))))
+;(format t "test: ~a~%" (isUsedInList '(a c) '((2 (a z)(d v))(3 (b v)(a x)))))
 
+; sifreli kelime ile verilen kelimeyi esletrimeye calisir
+; eger daha onceden farklı karakter ile eslesen karakter varsa nil dondurur
+; eslesmeyen yeni karakterleri liste olarak return eder
 (defun is-matched (chiperWord plainWord matchedWords)
-  (let* ((newMatches '(()))) ; create empty list, nil
+  (format t "chipperWord: ~a, plainWord:~a, matchedWords : ~a~%" chiperWord plainWord matchedWords)
+  (let* ((newMatches '())) ; create empty list, nil
     (loop for chipCh in chiperWord
       for plainCh in plainWord do
-      (format t " chipCh : ~a, plainCh : ~a~%" chipCh plainCh)
-      ; TODO: burası recursive olabilir
-      (loop for matched in matchedWords do
-        (loop for item in (rest matched) do
-          (if (equal (first item) chipCh) ;sifreli eleman listede varmi
-              (if (equal (second item) plainCh); listede aynisimi var. (X U) == (X U) ise devam
-                  (format t "   same element in match list~%")
-                  (progn (format t "   match with diff element~%") (return-from is-matched nil)) ; (X U) degilde (X Z ) varsa listede daha onceden eslesmis
-                )
-            (progn
-             (format t "    ~a not matched with item~a~%" chipCh item)
-             (setq newMatches (append (list (cons chipCh (cons plainCh nil))) newMatches  ))
-             ))
+      (format t "chipCh : ~a, plainCh : ~a " chipCh plainCh)
+      (let* ((result (isUsedInList (list chipCh plainCh) matchedWords) ))
+        (cond
+          ((null result)
+           (progn
+            (setf newMatches (append (list(list chipCh plainCh)) newMatches))
+            (format t " result: ~a add, newMatches:~a ~%"  result newMatches) ))
+          ((equal (second result) plainCh) (progn (format t " result: ~a same~%" result)))
+          (t (progn (format t " result: ~a diff~%" result) (return-from is-matched nil)))
           )
         )
       )
@@ -103,6 +117,7 @@
 
 (getMatchedParts '(a i y t) '0 '((2 (a t)(i h))) '((o k e y)(f r o m)(t h i s))  )
 
+;(format t "Test :~a~%" (is-matched '(a i y t) '(t h i s) '((2 (a t)(i h)(t s))) ))
 
 ;(format t "Test :~a~%" (foo '((K Q S S Y) (A I Y T) (M K Q))) )
 
