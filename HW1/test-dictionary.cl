@@ -7,13 +7,13 @@
 ; *********************************************
 
 (defparameter *my-d1* '(
-					(f r o m)
-          (f o r m)
-          (t e s t)
-          (s o f t)
-          (w a s)
-          (t h e)
+
+          (i s)
+          (a m)
+          (m y)
+          (a t o m)
+          (n a m e)
+          (n a n a)
           (h a s a n)
-          (h e l i o)
           (h e l l o)
           ))

@@ -8,7 +8,7 @@
 
 
 (defparameter *test-document* '(
-                        ((h e l l o));;paragraph 1
+                        ((h e l l o)(m y)(n a m e)(i s)(a t o m));;paragraph 1
                         ((t h i s)(i s)(t e s t));;paragraph 2
                         ))
 

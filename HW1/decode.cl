@@ -21,7 +21,7 @@
 
 ;; encode functions
 ;; includes encode ch,word and paragraph
-(load "encode.cl")
+;(load "encode.cl")
 
 ;; -----------------------------------------------------
 ;; DECODE FUNCTIONS
@@ -55,16 +55,22 @@
 
 ; word: (A C) (first: chiper last: plain)
 ; list : (3 (X T)(A C))
+; newslyMatched : yeni eslestirmelerin listesi
 ; eger liste icinde (A C) varsa AC return et
 ; eger (A ?) varsa onu return et
 ; yoksa nil return et
-(defun isUsedInList (word matchList)
+(defun isUsedInList (word matchList newslyMatched)
   ;(format t "inUsedList word:~a matchList:~a~%" word matchList)
   (loop for matched in matchList do
     (loop for item in (rest matched) do
       (if (equal (first item) (first word)) ;sifreli eleman listede varmi
             (return-from isUsedInList item)())
       ))
+
+  (loop for item in newslyMatched do
+    (if (equal (first item) (first word)) ;sifreli eleman listede varmi
+          (return-from isUsedInList item)())
+    )
     nil)
 
 ;(format t "test: ~a~%" (isUsedInList '(a c) '((2 (a z)(d v))(3 (b v)(a x)))))
@@ -81,17 +87,12 @@
     (loop for chipCh in chiperWord
       for plainCh in plainWord do
       ;(format t "chipCh : ~a, plainCh : ~a " chipCh plainCh)
-      (let* ((result (isUsedInList (list chipCh plainCh) matchedWords) ))
+      (let* ((result (isUsedInList (list chipCh plainCh) matchedWords newMatches) ))
         (cond
           ((null result)
-           (progn
-            (setf newMatches (append (list(list chipCh plainCh)) newMatches))
-            ;(format t " result: ~a add, newMatches:~a ~%"  result newMatches)
-            ))
-          ((equal (second result) plainCh) (progn (format t " result: ~a same~%" result)))
-          (t (progn
-              ;(format t " result: ~a diff~%" result)
-              (return-from is-matched nil)))
+            (setf newMatches (append (list(list chipCh plainCh)) newMatches))); listede yoksa ekle
+          ((equal (second result) plainCh)); ayni ise ekleme
+          (t (return-from is-matched nil)) ; daha once eslesmis demekki, hata ver
           )
         )
       )
@@ -102,14 +103,12 @@
 ; belirtilen indexten itibaren esletirmeye calis. Eslesince (2 (x y)(z y))
 ; seklinde return et, eslesme yoksa nil return et
 (defun getMatchedParts (word startIndex matchedWords dictionary)
-  (format t "word: ~a, matchedWords: ~a , " word matchedWords)
-
-
+  ;(format t "getMatchedParts params -> word: ~a, matchedWords: ~a , " word matchedWords)
   (let* ((listLength (length dictionary)))
-    (format t "Dictionary length: ~a~%" listLength)
+    ;(format t "Dictionary length: ~a~%" listLength)
     (loop ; sozluk boyutu kadar donecek
       (let* ((matchRes (is-matched word (nth startIndex dictionary) matchedWords)))
-        (format t "~a. word: ~a, nth: ~a, matchRes : ~a~%" startIndex word (nth startIndex dictionary ) matchRes)
+        ;(format t "~a. word: ~a, nth: ~a, matchRes : ~a~%" startIndex word (nth startIndex dictionary ) matchRes)
         (cond
           ((null matchRes) (setf startIndex (1+ startIndex)))
           (t (return-from getMatchedParts (cons startIndex matchRes)) )
@@ -120,54 +119,42 @@
     )
     )
 
-(defun decodeParagraph (paragraph)
-  (let* ((allMatches '(()))(parLen (length paragraph))(index 0)(searchIndex 0)(matchAlp '(())))
-
+(defun decodeParagraph (paragraph dictionary)
+  (let* ((allMatches nil)(parLen (length paragraph))(index 0)(searchIndex 0)(matchAlp '(())))
     (loop
-      (let* ((matches (getMatchedParts (nth index paragraph) searchIndex matchAlp *my-d1*)))
-        (format t "~a. word: ~a, matchRes : ~a~%" index (nth index paragraph) matches)
+      (let* ((matches (getMatchedParts (nth index paragraph) searchIndex allMatches dictionary)))
+        ;(format t "~a. word: ~a, matchRes : ~a~%" index (nth index paragraph) matches)
         (cond
           ((null matches) (progn
               (setf index (1- index))
+              (if (equal index -1)(return-from decodeParagraph nil))
               (setf searchIndex (1+ (first (first allMatches))))
               (setf allMatches (rest allMatches))
-              (format t "matches null~%")
               ))
           (t (progn
                 (setf index (1+ index))
-                (setf allMatches (append matches allMatches))
+                (setf allMatches (append (list matches) (list allMatches)))
                 (setf searchIndex 0)
-                (format t "match success~%")
                ))
-
           )
-
         (when (OR (< index 0) (= index parLen)) (return-from decodeParagraph allMatches))
-
-
-
-
         )
-
-
-
-
       )
     )
+  nil
   )
 
-(decodeParagraph '((A I Y T) (M K Q)))
+(defparameter *chipText* '((K Q S S Y) (T W) (G D T Q) (L J) (D M Y T)))
+
+(format t "Result: ~a ~%" (decodeParagraph *chipText* *my-d1*))
+;(format t "test: ~a~%" (decodeParagraph '((A I Y T) (M K Q) (c b u b p))))
+;(format t "test2: ~a ~%" (decodeParagraph (first *)
 
 ;(format t "test: ~a~%"(getMatchedParts '(a i y t) '0 '((2 (a t)(i h)(t a))) '((o k e y)(f r o m)(t h i s))  ))
 
-;(format t "Test :~a~%" (is-matched '(a i y t) '(t h i s) '((2 (a t)(i h)(t s))) ))
-
+;(format t "Test :~a~%" (is-matched '(m k q k p) '(t h i s) '((2 (a t)(i h)(t s))) ))
+;(format t "Test :~a~%" (is-matched '(k q s s y) '(h a s a n ) nil ))
 ;(format t "Test :~a~%" (foo '((K Q S S Y) (A I Y T) (M K Q))) )
-
-
-
-
-
 
 
 ;
