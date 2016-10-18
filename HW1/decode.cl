@@ -24,9 +24,6 @@
 (load "encode.cl")
 
 ;; -----------------------------------------------------
-;; HELPERS
-
-;; -----------------------------------------------------
 ;; DECODE FUNCTIONS
 
 (defun Gen-Decoder-A (paragraph)
@@ -62,7 +59,7 @@
 ; eger (A ?) varsa onu return et
 ; yoksa nil return et
 (defun isUsedInList (word matchList)
-  (format t "inUsedList word:~a matchList:~a~%" word matchList)
+  ;(format t "inUsedList word:~a matchList:~a~%" word matchList)
   (loop for matched in matchList do
     (loop for item in (rest matched) do
       (if (equal (first item) (first word)) ;sifreli eleman listede varmi
@@ -76,19 +73,25 @@
 ; eger daha onceden farklı karakter ile eslesen karakter varsa nil dondurur
 ; eslesmeyen yeni karakterleri liste olarak return eder
 (defun is-matched (chiperWord plainWord matchedWords)
-  (format t "chipperWord: ~a, plainWord:~a, matchedWords : ~a~%" chiperWord plainWord matchedWords)
+  ;(format t "chipperWord: ~a, plainWord:~a, matchedWords : ~a~%" chiperWord plainWord matchedWords)
+
+  (if (equal (length chiperWord) (length plainWord))()(return-from is-matched nil))
+
   (let* ((newMatches '())) ; create empty list, nil
     (loop for chipCh in chiperWord
       for plainCh in plainWord do
-      (format t "chipCh : ~a, plainCh : ~a " chipCh plainCh)
+      ;(format t "chipCh : ~a, plainCh : ~a " chipCh plainCh)
       (let* ((result (isUsedInList (list chipCh plainCh) matchedWords) ))
         (cond
           ((null result)
            (progn
             (setf newMatches (append (list(list chipCh plainCh)) newMatches))
-            (format t " result: ~a add, newMatches:~a ~%"  result newMatches) ))
+            ;(format t " result: ~a add, newMatches:~a ~%"  result newMatches)
+            ))
           ((equal (second result) plainCh) (progn (format t " result: ~a same~%" result)))
-          (t (progn (format t " result: ~a diff~%" result) (return-from is-matched nil)))
+          (t (progn
+              ;(format t " result: ~a diff~%" result)
+              (return-from is-matched nil)))
           )
         )
       )
@@ -100,13 +103,16 @@
 ; seklinde return et, eslesme yoksa nil return et
 (defun getMatchedParts (word startIndex matchedWords dictionary)
   (format t "word: ~a, matchedWords: ~a , " word matchedWords)
+
+
   (let* ((listLength (length dictionary)))
     (format t "Dictionary length: ~a~%" listLength)
     (loop ; sozluk boyutu kadar donecek
       (let* ((matchRes (is-matched word (nth startIndex dictionary) matchedWords)))
         (format t "~a. word: ~a, nth: ~a, matchRes : ~a~%" startIndex word (nth startIndex dictionary ) matchRes)
-        (cond ((null matchRes) (setf startIndex (1+ startIndex)))
-          (t (return-from getMatchedParts matchRes) )
+        (cond
+          ((null matchRes) (setf startIndex (1+ startIndex)))
+          (t (return-from getMatchedParts (cons startIndex matchRes)) )
           )
         )
       (when (equal startIndex listLength) (return-from getMatchedParts nil))
@@ -114,8 +120,45 @@
     )
     )
 
+(defun decodeParagraph (paragraph)
+  (let* ((allMatches '(()))(parLen (length paragraph))(index 0)(searchIndex 0)(matchAlp '(())))
 
-(getMatchedParts '(a i y t) '0 '((2 (a t)(i h))) '((o k e y)(f r o m)(t h i s))  )
+    (loop
+      (let* ((matches (getMatchedParts (nth index paragraph) searchIndex matchAlp *my-d1*)))
+        (format t "~a. word: ~a, matchRes : ~a~%" index (nth index paragraph) matches)
+        (cond
+          ((null matches) (progn
+              (setf index (1- index))
+              (setf searchIndex (1+ (first (first allMatches))))
+              (setf allMatches (rest allMatches))
+              (format t "matches null~%")
+              ))
+          (t (progn
+                (setf index (1+ index))
+                (setf allMatches (append matches allMatches))
+                (setf searchIndex 0)
+                (format t "match success~%")
+               ))
+
+          )
+
+        (when (OR (< index 0) (= index parLen)) (return-from decodeParagraph allMatches))
+
+
+
+
+        )
+
+
+
+
+      )
+    )
+  )
+
+(decodeParagraph '((A I Y T) (M K Q)))
+
+;(format t "test: ~a~%"(getMatchedParts '(a i y t) '0 '((2 (a t)(i h)(t a))) '((o k e y)(f r o m)(t h i s))  ))
 
 ;(format t "Test :~a~%" (is-matched '(a i y t) '(t h i s) '((2 (a t)(i h)(t s))) ))
 
