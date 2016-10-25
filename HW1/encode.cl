@@ -9,28 +9,28 @@
 (defun get-chiper-ch (ch)
 	; takes a char, converts cipher char
 	(case ch
-		('a 'd)
-		('b 'e)
+		('a 'e)
+		('b 'd)
 		('c 'f)
 		('d 'p)
-		('e 'q)
-		('f 'a)
+		('e 'a)
+		('f 'q)
 		('g 'b)
 		('h 'k)
-		('i 'l)
+		('i 'n)
 		('j 'c)
 		('k 'r)
 		('l 's)
-		('m 't)
-		('n 'g)
+		('m 'j)
+		('n 'o)
 		('o 'y)
 		('p 'z)
 		('q 'h)
-		('r 'i)
-		('s 'j)
+		('r 't)
+		('s 'i)
 		('t 'm)
-		('u 'n)
-		('v 'o)
+		('u 'l)
+		('v 'g)
 		('w 'u)
 		('x 'v)
 		('y 'w)
@@ -48,11 +48,13 @@
 
 (defun encode-doc (doc)
 	(if (null doc) ()
-		(append (list (encode-parag (car doc)) (encode-doc (cdr doc))))))
+		(append (list (encode-parag (car doc))) (encode-doc (cdr doc)))))
 
 
 (defvar *w1* '(h e l l o))
 (defvar *p1* '((h e l l o)(t h i s)))
+
+
 
 (defun test-encodes ()
 	; tests encode functions
@@ -65,6 +67,6 @@
 )
 
 ;(test-encodes)
-(format t "~a~%" (encode-parag (first *test-document*)))
+;(format t "~a~%" (encode-parag (first *test-document*)))
 ;(format t "~a~%" (encode-parag '((t h i s)(c o u r s e)(c o v e r s)(t o p i c s)(i n)(p r o g r a m m i n g)(l a n g u a g e s)(a n d)(c o m p i l e r s))))
 ;(format t "~a~%" (encode-parag '((H e l l o)(f r o m)(t h e)(o t h e r)(s i d e))))
