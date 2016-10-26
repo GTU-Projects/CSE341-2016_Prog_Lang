@@ -21,22 +21,11 @@
 
 (load "encode.cl")
 
-
+(defvar debugMode t) ; is debug open or close
 ;; -----------------------------------------------------
 ;; HELPERS
 ;; *** PLACE YOUR HELPER FUNCTIONS BELOW ***
 
-
-;; -----------------------------------------------------
-;; DECODE FUNCTIONS
-
-(defun Gen-Decoder-B-1 (paragraph)
-  ;you should implement this function
-)
-
-(defun Code-Breaker (document decoder)
-  ;you should implement this function
-)
 
   ; word: (A C) (first: chiper last: plain)
   ; list : (3 (X T)(A C))
@@ -112,36 +101,40 @@
     arr)); return result arr
 
 
-(defun foo (paragraph searchIndex matches)
-  (format t "Debug::~%~tP:~a ~%~tSI:~a ~%~tM:~a~%" paragraph searchIndex matches);
-  (if (null paragraph) (return-from foo nil))
-
+; this function works recursively, takes paragrah and sequentially match words with
+; plain word which in dictionary
+; searchIndex : index of dictionary to search point
+; matches : matched words, need to block invalid or double matches
+; returs all letters
+(defun rec-matcher (paragraph searchIndex matches)
+  (format debugMode "rec-Matcher params::~tPrg:~a ~%~tSearchIndex:~a ~%~tMatches:~a~%" paragraph searchIndex matches);
+  (if (null paragraph) (return-from rec-matcher nil)) ; base case
 
   (let* ((newMatches (find-matches (first paragraph) searchIndex matches))(result nil)(foundIndex nil))
-    (format t "findMatches: ~a~%" (first paragraph))
-    (if (null newMatches) (return-from foo -1)); eslesme yoksa -1 yolla
-    (format t "Debug2:: newMatches: ~a~%" newMatches)
-    (setf matches (append (list newMatches) matches)) ; yenileri basa ekle
+    (format debugMode "findMatches for: ~a~%" (first paragraph))
+    (if (null newMatches) (return-from rec-matcher -1));if not match return -1
+    (format debugMode "newMatches: ~a~%" newMatches)
+    (setf matches (append (list newMatches) matches)) ;add new matches to head
 
-
-    (setf result (foo (rest paragraph) 0 matches)) ; recursive kolu gerisi icin cagir
-    ;(format t "res:~a~%" result)
-
-    (if (equal result -1) ; eger eslesme yoksa
-      (progn ; indexten sonrasi icin arama yap
-        (setf foundIndex (1+ (first(first matches))))
-       (setf matches (rest matches)) ; listenin basini temizle
-             (return-from foo (foo paragraph foundIndex matches))) ; yeniden cagir
-      ) ; eslesmeler bitti - return et
-
-      (if (null result) ; eger paragraf bittiyse eslemeleri dondur
-        matches
-        result) ; recursive kollar icin return dondur
-
+    (setf result (rec-matcher (rest paragraph) 0 matches)) ;rec. call to next item
+    (if (equal result -1) ;if there is no matches
+        (progn ;change searchIndex and continue
+          (setf foundIndex (1+ (first(first matches))))
+         (setf matches (rest matches)) ;delete previous match
+               (return-from rec-matcher (rec-matcher paragraph foundIndex matches))) ; yeniden cagir
+        )
+    (if (null result) ; if paragraph ends
+      matches ; return matched words
+      result) ;return results for rec. calls
     )
   )
 
+; takes an special list and specifies which letters matched.
+; after specifing, makes an array and return match array
+; sample (S L)(A E)(P D) is input
+; add s to array element which index is l, and add others
 (defun list2alph (l)
+  (format debugMode "list2Alph l:~a~%" l)
   (if (null l) (return-from list2alph nil))
   (let* ((arr (make-array 26 :initial-element 0)))
     (loop for item in l do
@@ -151,18 +144,19 @@
           (setf (aref arr (c2i (second i))) (first i)))
         ))arr))
 
+; this function takes and list and finds most 6 occurances
+; then adds their equvalent(acccording to pdf , e t a o i n)
+; sample return val : ((a e)(m t)(e a)(y o)(n i)(o n))
+; sample : change a with e , m with t to find decoded doc
 (defun get-most-6-occ (l)
-  ;((a e)(m t)(e a)(y o)(n i)(o n))
-  ; a sifresi e yi belirtir
-  ; y nin decodu o
   (let* ((mostArr (find-occs-of-letters l))(mostList nil)(max -1)(index -1)(resList nil))
     (loop for j from 1 to 6 do
       (loop for i from 0 to 25 do
         (if (member i mostList)
-          () ; eger eklenmisse devam et
+          () ;do not add if added before
           (progn
            (if (> (aref mostArr i) max)
-             (progn ;(format t"i:~amax:~a--"(aref mostArr i) max) ; max olana bak
+             (progn
                     (setf max (aref mostArr i))
                     (setf index i))
              )))
@@ -170,79 +164,113 @@
         (setf mostList (append mostList (list index)))
         (setf max -1)
       )
-    ;(format t"mostList ~a~%" mostList )
+    ; add six element to list and return it
     (setf resList (append resList (list (list (i2c (first mostList)) 'e))))
     (setf resList (append resList (list (list (i2c (second mostList)) 't))))
     (setf resList (append resList (list (list (i2c (third mostList)) 'a))))
     (setf resList (append resList (list (list (i2c (fourth mostList)) 'o))))
     (setf resList (append resList (list (list (i2c (fifth mostList)) 'i))))
     (setf resList (append resList (list (list (i2c (sixth mostList)) 'n))))
+    resList
     )
+)
+
+(defun find-in-arr (arr ch)
+  (loop for i from 0 to 25 do
+    (if (equalp (aref arr i) ch) (progn (format t "eq: ~a ~a ~a  ~%" i ch (aref arr i))(return-from find-in-arr i)) () )
+    )
+    nil
   )
 
+(defun decode-word (word cipherAlph plainAlph)
+  (format t "::: w:~a c:~a p:~a~%" word cipherAlph plainAlph)
 
-  ;(format t "TEST::get-most-6-occ l:~a~% res:~a" (encode-doc *document3*) (get-most-6-occ (encode-doc *document3*)))
-  ;(terpri)(terpri)(terpri)
+	(if (null word) ()
+		(append (list (nth (find-in-arr cipherAlph (first word)) plainAlph )) (decode-word (cdr word) cipherAlph plainAlph))
+	))
 
+(defun apply-uncipher (doc cipherAlph)
+  (loop for parag in doc do
+    (loop for word in parag do
+      (format t "--" (decode-word word cipherAlph '(a b c d e f g h i j k l m n o p q r s t u v w x y z)))
+      )
+    )
 
+  )
+
+; this function takes an document then converts it to single paragraph
+; after that calls actual decode function
+; returns decoded document
 (defun decode-all (doc)
-  ;(let* ((allDoc nil)(matches '((0 (a e)(r t)(e a)(n o)(s i)(i n)))))
-  (let* ((allDocAsPrg nil)(matches nil))
+  (let* ((allDocAsPrg nil)(matches nil)(cipherAlph nil))
     (loop for i in doc do
-      (setf allDocAsPrg (append allDocAsPrg i)));tum documani tek prg gibi yap
+      (setf allDocAsPrg (append allDocAsPrg i)));convert all doc to paragraph
+      (setf matches (cons 0 (get-most-6-occ doc))) ;find first 6 matches accorting to pdf
+      (format debugMode "allDocAsPrg:~a~%" allDocAsPrg); test for new paragraph
+      (format debugMode "6matches: ~a~%" matches) ; test for matches
+      (format debugMode "Res: ~a~%" (rec-matcher allDocAsPrg 0 (list matches)))
+      ;(format t "alph:   ~a~%" (list2alph (rec-matcher allDocAsPrg 0 (list matches))))
+      (setf cipherAlph (list2alph (rec-matcher allDocAsPrg 0 (list matches))))
+      ;(format t "CipherAlph:~a~%" cipherAlph)
 
-      (setf matches (cons 0 (get-most-6-occ doc))) ; ilk 6 eslemeyi al
-
-      (format t "allDocAsPrg:~a~%" allDocAsPrg)
-      (format t "6matches: ~a~%" matches)
-      (format t "Res: ~a~%" (foo allDocAsPrg 0 (list matches)))
-      (format t "alph:   ~a~%" (list2alph (foo allDocAsPrg 0 (list matches))))
-      (list2alph (foo allDocAsPrg 0 (list matches)))
+      (apply-uncipher doc cipherAlph)
     )
   )
 
 
+; Prints number of occurances per letter to control
 (defun writeOccAlp (arr)
   (format t "Char occurences: ")
   (loop for i from 0 to 25 do
     (format t "(~a, ~a), " (i2c i) (aref arr i))
     )
   (terpri)
-  )
+)
 
-(defparameter *alphabet* '(a b c d e f g h i j k l m n o p q r s t u v w x y z))
-(defparameter *chipAlph* (encode-word *alphabet*))
-
-(format t "Alph:    ~a~%" *alphabet*)
-(format t "ChipAlp: ~a~%"*chipAlph*)
-(format t "--------------------------------------------------------------~%")
-
-(format t "Plain doc: ~a~%~%" *document3*)
-(writeOccAlp (find-occs-of-letters *document3*))
-(format t "--------------------------------------------------------------~%")
-
-
-(defvar *encoded-doc* (encode-doc *document3*))
-(format t "Encoded doc: ~a~%~%" *encoded-doc* )
-(writeOccAlp (find-occs-of-letters *encoded-doc*))
-(format t "--------------------------------------------------------------~%")
-
-
+;; -----------------------------------------------------
+;; DECODE FUNCTIONS
 (defun Gen-Decoder-B-0 (paragraph)
   (lambda (paragraph) (decode-all paragraph))
 )
 
-(defun test (x)
-  (lambda (x) (+ x 10)))
+(defun Gen-Decoder-B-1 (paragraph)
+  ;you should implement this function
+)
 
-(format t "::~a~%"(decode-all *encoded-doc*))
-(format t "ChipAlp: ~a~%"*chipAlph*)
+(defun Code-Breaker (document decoder)
+  (funcall (funcall decoder document) document)
+)
+
+
+(defun my-test ()
+  (defparameter *alphabet* '(a b c d e f g h i j k l m n o p q r s t u v w x y z))
+  (defparameter *chipAlph* (encode-word *alphabet*))
+
+  (format t "Alph:    ~a~%" *alphabet*)
+  (format t "ChipAlp: ~a~%"*chipAlph*)
+  (format t "--------------------------------------------------------------~%")
+
+  (format t "Plain doc: ~a~%~%" *document3*)
+  (writeOccAlp (find-occs-of-letters *document3*))
+  (format t "--------------------------------------------------------------~%")
+
+  (defvar *encoded-doc* (encode-doc *document3*))
+  (format t "Encoded doc: ~a~%~%" *encoded-doc* )
+  (writeOccAlp (find-occs-of-letters *encoded-doc*))
+  (format t "--------------------------------------------------------------~%")
+)
+
+(my-test)
+
+
+
+
+(format debugMode "FoundChip:~a~%" (Code-Breaker *encoded-doc* 'Gen-Decoder-B-0) )
+;(format t "::~a~%" (funcall (Gen-Decoder-B-0 *encoded-doc*) *encoded-doc*))
+;(format t "::~a~%" (decode-all *encoded-doc*) )
+
 ;(let* ((myfunc (Gen-Decoder-B-0 *encoded-doc*)))
 ;  (format t "Test:~a~%" (funcall myfunc *encoded-doc*))
 ;  )
 
 ;(format t "t:~a~%" (is-matched '(e o) '(a n) '((0 (e a)(t r)(a e)(o n)(i s)(n i)))))
-
-
-;(format t "Most Occs: ~a~%" (find-most-occs *prg*))
-;(format t "RetVal of find-alphabet: ~a~%" (foo *prg* 0 *matches*))
