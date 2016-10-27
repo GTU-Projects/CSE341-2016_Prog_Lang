@@ -4,6 +4,7 @@
 ; *  Author: Liu Liu                          *
 ; *          Ulrich Kremer                    *
 ; *          Furkan Tektas , clisp            *
+; *          Hasan Men -- 131044009           *
 ; *********************************************
 
 ;; ENVIRONMENT
@@ -22,82 +23,80 @@
 (load "encode.cl")
 
 (defvar debugMode nil) ; is debug open or close
-(defvar debugMode2 t)
+(defvar debugMode2 nil)
 ;; -----------------------------------------------------
 ;; HELPERS
 ;; *** PLACE YOUR HELPER FUNCTIONS BELOW ***
 
-
-  ; word: (A C) (first: chiper last: plain)
-  ; list : (3 (X T)(A C))
-  ; newslyMatched : yeni eslestirmelerin listesi
-  ; eger liste icinde (A C) varsa AC return et
-  ; eger (A ?) varsa onu return et
-  ; yoksa nil return et
-  (defun isUsedInList (word matchList newslyMatched)
-    ;(format t "inUsedList word:~a matchList:~a~%" word matchList)
-    (loop for matched in matchList do
-      (loop for item in (rest matched) do
-        (if (equal (first item) (first word)) ;sifreli eleman listede varmi
-              (return-from isUsedInList item)())
-        (if (equal (second item) (second word)) ;ikinci karakterleride esitmi
-              (return-from isUsedInList '(* *))()) ;var ise hatali return et
-        ))
-
-    (loop for item in newslyMatched do
+; word: (A C) (first: chiper last: plain)
+; list : (3 (X T)(A C))
+; newslyMatched : yeni eslestirmelerin listesi
+; eger liste icinde (A C) varsa AC return et
+; eger (A ?) varsa onu return et
+; yoksa nil return et
+(defun isUsedInList (word matchList newslyMatched)
+  ;(format t "inUsedList word:~a matchList:~a~%" word matchList)
+  (loop for matched in matchList do
+    (loop for item in (rest matched) do
       (if (equal (first item) (first word)) ;sifreli eleman listede varmi
             (return-from isUsedInList item)())
       (if (equal (second item) (second word)) ;ikinci karakterleride esitmi
-            (return-from isUsedInList '(* *))())
-      )
-      nil)
+            (return-from isUsedInList '(* *))()) ;var ise hatali return et
+      ))
 
-  ;(format t "test: ~a~%" (isUsedInList '(a c) '((2 (a z)(d v))(3 (b v)(a x)))))
+  (loop for item in newslyMatched do
+    (if (equal (first item) (first word)) ;sifreli eleman listede varmi
+          (return-from isUsedInList item)())
+    (if (equal (second item) (second word)) ;ikinci karakterleride esitmi
+          (return-from isUsedInList '(* *))())
+    )
+    nil)
 
-  ; sifreli kelime ile verilen kelimeyi esletrimeye calisir
-  ; eger daha onceden farklı karakter ile eslesen karakter varsa nil dondurur
-  ; eslesmeyen yeni karakterleri liste olarak return eder
-  (defun is-matched (chiperWord plainWord matchedWords)
-    (if (equal (length chiperWord) (length plainWord))()(return-from is-matched nil))
+; sifreli kelime ile verilen kelimeyi esletrimeye calisir
+; eger daha onceden farklı karakter ile eslesen karakter varsa nil dondurur
+; eslesmeyen yeni karakterleri liste olarak return eder
+(defun is-matched (chiperWord plainWord matchedWords)
+  (if (equal (length chiperWord) (length plainWord))()(return-from is-matched nil))
 
-    (let* ((newMatches '())) ; create empty list, nil
-      (loop for chipCh in chiperWord
-        for plainCh in plainWord do
-        (format debugMode "chipperWord: ~a, plainWord:~a, matchedWords : ~a~%" chiperWord plainWord matchedWords)
-        (let ((result (isUsedInList (list chipCh plainCh) matchedWords newMatches) ))
-          (format debugMode "rest:~a~%" result)
-          (cond
-            ((null result)
-              (setf newMatches (append (list(list chipCh plainCh)) newMatches))); listede yoksa ekle
-            ((equal (second result) plainCh) (setf newMatches (append (list(list chipCh plainCh)) newMatches))); ayni ise ekle
-            (t (return-from is-matched nil)) ; daha once eslesmis demekki, hata ver
-            )
+  (let* ((newMatches '())) ; create empty list, nil
+    (loop for chipCh in chiperWord
+      for plainCh in plainWord do
+      (format debugMode "chipperWord: ~a, plainWord:~a, matchedWords : ~a~%" chiperWord plainWord matchedWords)
+      (let ((result (isUsedInList (list chipCh plainCh) matchedWords newMatches) ))
+        (format debugMode "rest:~a~%" result)
+        (cond
+          ((null result)
+            (setf newMatches (append (list(list chipCh plainCh)) newMatches))); listede yoksa ekle
+          ((equal (second result) plainCh) (setf newMatches (append (list(list chipCh plainCh)) newMatches))); ayni ise ekle
+          (t (return-from is-matched nil)) ; daha once eslesmis demekki, hata ver
           )
         )
-        newMatches
+      )
+      newMatches
+    )
+  )
+
+; belirtilen indexten itibaren esletirmeye calis. Eslesince (2 (x y)(z y))
+; seklinde return et, eslesme yoksa nil return et
+(defun find-matches (word startIndex matchedWords)
+  (format debugMode "getMatchedParts params -> word: ~a, matchedWords: ~a ~%" word matchedWords)
+  (let* ((listLength (length *dictionary*)))
+    ;(format t "Dictionary length: ~a~%" listLength)
+    (loop ; sozluk boyutu kadar donecek
+      (format debugMode "str:~a~%" (nth startIndex *dictionary*))
+      (let* ((matchRes (is-matched word (nth startIndex *dictionary*) matchedWords)))
+        (format debugMode "~a. word: ~a, nth: ~a, matchRes : ~a~%" startIndex word (nth startIndex *dictionary* ) matchRes)
+        (cond
+          ((null matchRes) (setf startIndex (1+ startIndex)))
+          (t (return-from find-matches (cons startIndex matchRes)) )
+          )
+        )
+      (when (equal startIndex listLength) (return-from find-matches nil))
       )
     )
+    )
 
-  ; belirtilen indexten itibaren esletirmeye calis. Eslesince (2 (x y)(z y))
-  ; seklinde return et, eslesme yoksa nil return et
-  (defun find-matches (word startIndex matchedWords)
-    (format debugMode "getMatchedParts params -> word: ~a, matchedWords: ~a ~%" word matchedWords)
-    (let* ((listLength (length *dictionary*)))
-      ;(format t "Dictionary length: ~a~%" listLength)
-      (loop ; sozluk boyutu kadar donecek
-        (format debugMode "str:~a~%" (nth startIndex *dictionary*))
-        (let* ((matchRes (is-matched word (nth startIndex *dictionary*) matchedWords)))
-          (format debugMode "~a. word: ~a, nth: ~a, matchRes : ~a~%" startIndex word (nth startIndex *dictionary* ) matchRes)
-          (cond
-            ((null matchRes) (setf startIndex (1+ startIndex)))
-            (t (return-from find-matches (cons startIndex matchRes)) )
-            )
-          )
-        (when (equal startIndex listLength) (return-from find-matches nil))
-        )
-      )
-      )
-
+; dokuman icin karakterlerin sıklık oranını bulur ve array olarak return eder
 (defun find-occs-of-letters (document)
   (let* ((arr (make-array 26 :initial-element 0)))
     (loop for paragraph in document do
@@ -145,7 +144,6 @@
   (let* ((arr (make-array 26 :initial-element 0)))
     (loop for item in l do
       (loop for i in item do
-        ;(format t "i:~a~%" i)
         (if (numberp i) ()
           (setf (aref arr (c2i (second i))) (first i)))
         ))arr))
@@ -181,6 +179,7 @@
     )
 )
 
+; array icin eleman arar, var ise indexi yok ise nil return eder
 (defun find-in-arr (arr ch)
   (loop for i from 0 to 25 do
     (if (equalp (aref arr i) ch) (return-from find-in-arr i) () )
@@ -188,14 +187,18 @@
     nil
   )
 
+;apply-uncipher ile birlikte kullanilir
+;alfabelerden yararlanarak kelime üzerinde degistirmeler yapar ve return eder
+;sifreli kelimeyi plain kelimeye cevir
 (defun decode-word (word cipherAlph plainAlph)
-  ;(format t "::: w:~a c:~a~%" word cipherAlph)
 	(if (null word) ()
 		(let* ((index (find-in-arr cipherAlph (first word))))
+    ; kelimeleyi recursive olarak coz
       (if (null index) (append '(*) (decode-word (cdr word) cipherAlph plainAlph))
           (append (list (nth index plainAlph )) (decode-word (cdr word) cipherAlph plainAlph))
         ))))
 
+; sifreli dokuman uzerinde alfabeyi kullanarak plain texti bulur vve return eder
 (defun apply-uncipher (doc cipherAlph)
   (let* ((newDoc nil)(alphabet '(a b c d e f g h i j k l m n o p q r s t u v w x y z)))
     (loop for parag in doc do
@@ -210,31 +213,34 @@
   )
 )
 
-; this function takes an document then converts it to single paragraph
-; after that calls actual decode function
-; returns decoded document
+; Bir dokuman alarak hepsini bir paragraf haline getirir ve sifre cozmaya baslar
+; cozulen sifreyi return eder
 (defun decode-all (doc)
-  (let* ((allDocAsPrg nil)(matches nil)(cipherAlph nil)(plainText nil))
+  (let* ((allDocAsPrg nil)(matches nil)(cipherAlph nil)(plainText nil)); degiskenler
     (loop for i in doc do
-      (setf allDocAsPrg (append allDocAsPrg i)));convert all doc to paragraph
-      (setf matches (cons 0 (get-most-6-occ doc))) ;find first 6 matches accorting to pdf
-      (format debugMode "allDocAsPrg:~a~%" allDocAsPrg); test for new paragraph
-      (format debugMode "6matches: ~a~%" matches) ; test for matches
-      (format t "~%~%-----------------------------------~%")
-      ;(format debugMode "Res: ~a~%" (rec-matcher allDocAsPrg 0 (list matches)))
+      (setf allDocAsPrg (append allDocAsPrg i)));dokumani paragraf yap
 
+      (setf matches (cons 0 (get-most-6-occ doc))); en cok tekrar eden 6 karakteri bul
+      (format debugMode "allDocAsPrg:~a~%" allDocAsPrg); test icin bast
+      (format debugMode "6matches: ~a~%" matches); test icin bas
+      (format debugMode "~%~%-----------------------------------~%")
+
+      ; recursive olarak kelimelere es deger kelime bul
+      ;bulunan kelimelerden sifre alfabesini bul
       (setf cipherAlph (list2alph (rec-matcher allDocAsPrg 0 (list matches))))
       ;(format debugMode2 "NormalAlph: ~a~%" *alphabet*)
       ;(format debugMode2 "CipherAlph:~a~%" cipherAlph)
       ;(format debugMode2 "alp2:       ~a~%" *chipAlph*)
 
+      ;alfabe ile metni coz
       (setf plainText (apply-uncipher doc cipherAlph))
     plainText
     )
   )
 
 
-; Prints number of occurances per letter to control
+; dizi icindeki sayilarin karakter karsiligini basar
+; tekrar numaralarinin aitliklerini basmak ici test fonsiyonumda calisir
 (defun writeOccAlp (arr)
   (format t "Char occurences: ")
   (loop for i from 0 to 25 do
@@ -257,34 +263,45 @@
   (funcall (funcall decoder document) document)
 )
 
+;;;;;;;;; TEST ICIN CALISTIRABILIRSINIZ ;;;;;;;;;;;;;;;;;;;;;;;;;;
+;(format t "FoundChip:~a~%" (Code-Breaker *document* 'Gen-Decoder-B-0) )
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 1-2 tane ufak test metodunu icerir ;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun my-test ()
   (defparameter *alphabet* '(a b c d e f g h i j k l m n o p q r s t u v w x y z))
-  (defparameter *chipAlph* (encode-word *alphabet*))
-
+  (defparameter *chipAlph* '(E D F P A Q B K N C R S J O Y Z H T I M L G U V W X))
+  (defparameter *my-test-doc* '(
+                    ((a )(j u l y)(j u n e)(o )(o )(h e r)(a e o)(t h i s)(c o u r s e)(i t s)(c o v e r s)(t o p i c s)(i n)(l a n g u a g e )(a d d)(c o m p i l e r s))
+                    ((o )(t h i s)(a t t r i b u t e)(t h i n g)(g r a m m a r s)(a n d)(t h e i r)(u s e)(i n)(s y n t a x)(d i r e c t e d)(t r a n s l a t i o n))
+                    ((a n)(o n)(t h o u g h)(m o d e l )(o f)(p r o g r a m m i n g)(l a n g u a g e)(s e m a n t i c s))
+                    ((t h e s e)(i n t e r m e d i a t e)(r e p r e s e n t a t i o n)(o f)(a t)(o k)(m o d e l))
+                    ))
+  (defparameter *dictionary* '(
+            (e)(a)(i)(o)(i s)(a m)(a n)(a t)(i n)(o n)(m y)(a s)(h i s)(t h e)
+            (h e r)(a n d)(a d d)(a r e)(n a m e)(j u n e)(j u l y)(a t o m)
+            (t h i s)(t h a t)(a k a y)(n a n a)(h a s a n)(h e l l o)(t o p i c s)
+            (c o u r s e)(c o v e r s)(p r o g r a m m i n g)(l a n g u a g e s)
+            (a n d) (c o m p i l e r s)
+            (a )(o )(o )(h e r)(a e o)(t h i s)(c o u r s e)(i t s)(c o v e r s)(t o p i c s)(i n)(l a n g u a g e )(a d d)(c o m p i l e r s)
+            (o )(t h i s)(a t t r i b u t e)(t h i n g)(g r a m m a r s)(a n d)(t h e i r)(u s e)(i n)(s y n t a x)(d i r e c t e d)(t r a n s l a t i o n)
+            (a n)(o n)(t h o u g h)(m o d e l )(o f)(p r o g r a m m i n g)(l a n g u a g e)(s e m a n t i c s)
+            (t h e s e)(i n t e r m e d i a t e)(r e p r e s e n t a t i o n)(o f)(a t)(o k)(m o d e l)
+            ))
   (format t "Alph:    ~a~%" *alphabet*)
   (format t "ChipAlp: ~a~%"*chipAlph*)
   (format t "--------------------------------------------------------------~%")
 
-  (format t "Plain doc: ~a~%~%" *document*)
-  (writeOccAlp (find-occs-of-letters *document*))
+  (format t "Plain doc: ~a~%~%" *my-test-doc*)
+  (writeOccAlp (find-occs-of-letters *my-test-doc*))
   (format t "--------------------------------------------------------------~%")
 
-  (defvar *encoded-doc* (encode-doc *document*))
+  (defvar *encoded-doc* (encode-doc *my-test-doc*))
   (format t "Encoded doc: ~a~%~%" *encoded-doc* )
   (writeOccAlp (find-occs-of-letters *encoded-doc*))
   (format t "--------------------------------------------------------------~%")
+  (format t "Found Plain Text:~a~%" (Code-Breaker *my-test-doc* 'Gen-Decoder-B-0) )
 )
 
 ;(my-test)
-(format t "FoundChip:~a~%" (Code-Breaker *document* 'Gen-Decoder-B-0) )
-;(my-test)
-;(my-test)
-;(format t "::~a~%" (funcall (Gen-Decoder-B-0 *encoded-doc*) *encoded-doc*))
-;(format t "::~a~%" (decode-all *encoded-doc*) )
-
-;(let* ((myfunc (Gen-Decoder-B-0 *encoded-doc*)))
-;  (format t "Test:~a~%" (funcall myfunc *encoded-doc*))
-;  )
-
-;(format t "t:~a~%" (is-matched '(e o) '(a n) '((0 (e a)(t r)(a e)(o n)(i s)(n i)))))
