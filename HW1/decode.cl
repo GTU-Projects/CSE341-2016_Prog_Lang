@@ -54,12 +54,13 @@
   ; eslesmeyen yeni karakterleri liste olarak return eder
   (defun is-matched (chiperWord plainWord matchedWords)
     (if (equal (length chiperWord) (length plainWord))()(return-from is-matched nil))
-    ;(format t "chipperWord: ~a, plainWord:~a, matchedWords : ~a~%" chiperWord plainWord matchedWords)
+
     (let* ((newMatches '())) ; create empty list, nil
       (loop for chipCh in chiperWord
         for plainCh in plainWord do
-        (let* ((result (isUsedInList (list chipCh plainCh) matchedWords newMatches) ))
-          ;(format t "rest:~a~%" result)
+        (format t "chipperWord: ~a, plainWord:~a, matchedWords : ~a~%" chiperWord plainWord matchedWords)
+        (let ((result (isUsedInList (list chipCh plainCh) matchedWords newMatches) ))
+          (format t "rest:~a~%" result)
           (cond
             ((null result)
               (setf newMatches (append (list(list chipCh plainCh)) newMatches))); listede yoksa ekle
@@ -75,13 +76,13 @@
   ; belirtilen indexten itibaren esletirmeye calis. Eslesince (2 (x y)(z y))
   ; seklinde return et, eslesme yoksa nil return et
   (defun find-matches (word startIndex matchedWords)
-    ;(format t "getMatchedParts params -> word: ~a, matchedWords: ~a , " word matchedWords)
+    (format t "getMatchedParts params -> word: ~a, matchedWords: ~a ~%" word matchedWords)
     (let* ((listLength (length *dictionary*)))
       ;(format t "Dictionary length: ~a~%" listLength)
       (loop ; sozluk boyutu kadar donecek
-        ;(format t "str:~a~%" (nth startIndex *dictionary*))
+        (format t "str:~a~%" (nth startIndex *dictionary*))
         (let* ((matchRes (is-matched word (nth startIndex *dictionary*) matchedWords)))
-          ;(format t "~a. word: ~a, nth: ~a, matchRes : ~a~%" startIndex word (nth startIndex *dictionary* ) matchRes)
+          (format t "~a. word: ~a, nth: ~a, matchRes : ~a~%" startIndex word (nth startIndex *dictionary* ) matchRes)
           (cond
             ((null matchRes) (setf startIndex (1+ startIndex)))
             (t (return-from find-matches (cons startIndex matchRes)) )
@@ -112,8 +113,8 @@
 
   (let* ((newMatches (find-matches (first paragraph) searchIndex matches))(result nil)(foundIndex nil))
     (format debugMode "findMatches for: ~a~%" (first paragraph))
-    (if (null newMatches) (return-from rec-matcher -1));if not match return -1
     (format debugMode "newMatches: ~a~%" newMatches)
+    (if (null newMatches) (return-from rec-matcher -1));if not match return -1
     (setf matches (append (list newMatches) matches)) ;add new matches to head
 
     (setf result (rec-matcher (rest paragraph) 0 matches)) ;rec. call to next item
@@ -177,22 +178,23 @@
 
 (defun find-in-arr (arr ch)
   (loop for i from 0 to 25 do
-    (if (equalp (aref arr i) ch) (progn (format t "eq: ~a ~a ~a  ~%" i ch (aref arr i))(return-from find-in-arr i)) () )
+    (if (equalp (aref arr i) ch) (return-from find-in-arr i) () )
     )
     nil
   )
 
 (defun decode-word (word cipherAlph plainAlph)
-  (format t "::: w:~a c:~a p:~a~%" word cipherAlph plainAlph)
-
+  ;(format t "::: w:~a c:~a~%" word cipherAlph)
 	(if (null word) ()
-		(append (list (nth (find-in-arr cipherAlph (first word)) plainAlph )) (decode-word (cdr word) cipherAlph plainAlph))
-	))
+		(let* ((index (find-in-arr cipherAlph (first word))))
+      (if (null index) (append '(*) (decode-word (cdr word) cipherAlph plainAlph))
+          (append (list (nth index plainAlph )) (decode-word (cdr word) cipherAlph plainAlph))
+        ))))
 
 (defun apply-uncipher (doc cipherAlph)
   (loop for parag in doc do
     (loop for word in parag do
-      (format t "--" (decode-word word cipherAlph '(a b c d e f g h i j k l m n o p q r s t u v w x y z)))
+      (format t "TestRes::~a~%" (decode-word word cipherAlph '(a b c d e f g h i j k l m n o p q r s t u v w x y z)))
       )
     )
 
@@ -208,10 +210,13 @@
       (setf matches (cons 0 (get-most-6-occ doc))) ;find first 6 matches accorting to pdf
       (format debugMode "allDocAsPrg:~a~%" allDocAsPrg); test for new paragraph
       (format debugMode "6matches: ~a~%" matches) ; test for matches
-      (format debugMode "Res: ~a~%" (rec-matcher allDocAsPrg 0 (list matches)))
-      ;(format t "alph:   ~a~%" (list2alph (rec-matcher allDocAsPrg 0 (list matches))))
+      (format t "~%~%-----------------------------------~%")
+      ;(format debugMode "Res: ~a~%" (rec-matcher allDocAsPrg 0 (list matches)))
+
       (setf cipherAlph (list2alph (rec-matcher allDocAsPrg 0 (list matches))))
-      ;(format t "CipherAlph:~a~%" cipherAlph)
+      (format t "NormalAlph: ~a~%" *alphabet*)
+      (format t "CipherAlph:~a~%" cipherAlph)
+      (format t "alp2:       ~a~%" *chipAlph*)
 
       (apply-uncipher doc cipherAlph)
     )
@@ -261,11 +266,8 @@
 )
 
 (my-test)
-
-
-
-
 (format debugMode "FoundChip:~a~%" (Code-Breaker *encoded-doc* 'Gen-Decoder-B-0) )
+(my-test)
 ;(format t "::~a~%" (funcall (Gen-Decoder-B-0 *encoded-doc*) *encoded-doc*))
 ;(format t "::~a~%" (decode-all *encoded-doc*) )
 
