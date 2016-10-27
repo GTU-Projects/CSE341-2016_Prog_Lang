@@ -21,7 +21,8 @@
 
 (load "encode.cl")
 
-(defvar debugMode t) ; is debug open or close
+(defvar debugMode nil) ; is debug open or close
+(defvar debugMode2 t)
 ;; -----------------------------------------------------
 ;; HELPERS
 ;; *** PLACE YOUR HELPER FUNCTIONS BELOW ***
@@ -39,11 +40,15 @@
       (loop for item in (rest matched) do
         (if (equal (first item) (first word)) ;sifreli eleman listede varmi
               (return-from isUsedInList item)())
+        (if (equal (second item) (second word)) ;ikinci karakterleride esitmi
+              (return-from isUsedInList '(* *))()) ;var ise hatali return et
         ))
 
     (loop for item in newslyMatched do
       (if (equal (first item) (first word)) ;sifreli eleman listede varmi
             (return-from isUsedInList item)())
+      (if (equal (second item) (second word)) ;ikinci karakterleride esitmi
+            (return-from isUsedInList '(* *))())
       )
       nil)
 
@@ -58,9 +63,9 @@
     (let* ((newMatches '())) ; create empty list, nil
       (loop for chipCh in chiperWord
         for plainCh in plainWord do
-        (format t "chipperWord: ~a, plainWord:~a, matchedWords : ~a~%" chiperWord plainWord matchedWords)
+        (format debugMode "chipperWord: ~a, plainWord:~a, matchedWords : ~a~%" chiperWord plainWord matchedWords)
         (let ((result (isUsedInList (list chipCh plainCh) matchedWords newMatches) ))
-          (format t "rest:~a~%" result)
+          (format debugMode "rest:~a~%" result)
           (cond
             ((null result)
               (setf newMatches (append (list(list chipCh plainCh)) newMatches))); listede yoksa ekle
@@ -76,13 +81,13 @@
   ; belirtilen indexten itibaren esletirmeye calis. Eslesince (2 (x y)(z y))
   ; seklinde return et, eslesme yoksa nil return et
   (defun find-matches (word startIndex matchedWords)
-    (format t "getMatchedParts params -> word: ~a, matchedWords: ~a ~%" word matchedWords)
+    (format debugMode "getMatchedParts params -> word: ~a, matchedWords: ~a ~%" word matchedWords)
     (let* ((listLength (length *dictionary*)))
       ;(format t "Dictionary length: ~a~%" listLength)
       (loop ; sozluk boyutu kadar donecek
-        (format t "str:~a~%" (nth startIndex *dictionary*))
+        (format debugMode "str:~a~%" (nth startIndex *dictionary*))
         (let* ((matchRes (is-matched word (nth startIndex *dictionary*) matchedWords)))
-          (format t "~a. word: ~a, nth: ~a, matchRes : ~a~%" startIndex word (nth startIndex *dictionary* ) matchRes)
+          (format debugMode "~a. word: ~a, nth: ~a, matchRes : ~a~%" startIndex word (nth startIndex *dictionary* ) matchRes)
           (cond
             ((null matchRes) (setf startIndex (1+ startIndex)))
             (t (return-from find-matches (cons startIndex matchRes)) )
@@ -192,19 +197,24 @@
         ))))
 
 (defun apply-uncipher (doc cipherAlph)
-  (loop for parag in doc do
-    (loop for word in parag do
-      (format t "TestRes::~a~%" (decode-word word cipherAlph '(a b c d e f g h i j k l m n o p q r s t u v w x y z)))
+  (let* ((newDoc nil)(alphabet '(a b c d e f g h i j k l m n o p q r s t u v w x y z)))
+    (loop for parag in doc do
+      (let* ((newParag nil))
+        (loop for word in parag do
+          (setf newParag (append newParag (list(decode-word word cipherAlph alphabet))))
+          )
+        (setf newDoc (append newDoc (list newParag)))
       )
     )
-
+    newDoc
   )
+)
 
 ; this function takes an document then converts it to single paragraph
 ; after that calls actual decode function
 ; returns decoded document
 (defun decode-all (doc)
-  (let* ((allDocAsPrg nil)(matches nil)(cipherAlph nil))
+  (let* ((allDocAsPrg nil)(matches nil)(cipherAlph nil)(plainText nil))
     (loop for i in doc do
       (setf allDocAsPrg (append allDocAsPrg i)));convert all doc to paragraph
       (setf matches (cons 0 (get-most-6-occ doc))) ;find first 6 matches accorting to pdf
@@ -214,11 +224,12 @@
       ;(format debugMode "Res: ~a~%" (rec-matcher allDocAsPrg 0 (list matches)))
 
       (setf cipherAlph (list2alph (rec-matcher allDocAsPrg 0 (list matches))))
-      (format t "NormalAlph: ~a~%" *alphabet*)
-      (format t "CipherAlph:~a~%" cipherAlph)
-      (format t "alp2:       ~a~%" *chipAlph*)
+      ;(format debugMode2 "NormalAlph: ~a~%" *alphabet*)
+      ;(format debugMode2 "CipherAlph:~a~%" cipherAlph)
+      ;(format debugMode2 "alp2:       ~a~%" *chipAlph*)
 
-      (apply-uncipher doc cipherAlph)
+      (setf plainText (apply-uncipher doc cipherAlph))
+    plainText
     )
   )
 
@@ -255,19 +266,20 @@
   (format t "ChipAlp: ~a~%"*chipAlph*)
   (format t "--------------------------------------------------------------~%")
 
-  (format t "Plain doc: ~a~%~%" *document3*)
-  (writeOccAlp (find-occs-of-letters *document3*))
+  (format t "Plain doc: ~a~%~%" *document*)
+  (writeOccAlp (find-occs-of-letters *document*))
   (format t "--------------------------------------------------------------~%")
 
-  (defvar *encoded-doc* (encode-doc *document3*))
+  (defvar *encoded-doc* (encode-doc *document*))
   (format t "Encoded doc: ~a~%~%" *encoded-doc* )
   (writeOccAlp (find-occs-of-letters *encoded-doc*))
   (format t "--------------------------------------------------------------~%")
 )
 
-(my-test)
-(format debugMode "FoundChip:~a~%" (Code-Breaker *encoded-doc* 'Gen-Decoder-B-0) )
-(my-test)
+;(my-test)
+(format t "FoundChip:~a~%" (Code-Breaker *document* 'Gen-Decoder-B-0) )
+;(my-test)
+;(my-test)
 ;(format t "::~a~%" (funcall (Gen-Decoder-B-0 *encoded-doc*) *encoded-doc*))
 ;(format t "::~a~%" (decode-all *encoded-doc*) )
 

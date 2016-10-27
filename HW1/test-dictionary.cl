@@ -26,6 +26,8 @@
           (a d d)
           (a r e)
           (n a m e)
+          (j u n e)
+          (j u l y)
           (a t o m)
           (t h i s)
           (t h a t)
