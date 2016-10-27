@@ -48,7 +48,7 @@
     (if (equal (first item) (first word)) ;sifreli eleman listede varmi
           (return-from isUsedInList item)())
     (if (equal (second item) (second word)) ;ikinci karakterleride esitmi
-          (return-from isUsedInList '(* *))())
+          (return-from isUsedInList '(* *))()); var ise hatali return et
     )
     nil)
 
@@ -264,7 +264,7 @@
 )
 
 ;;;;;;;;; TEST ICIN CALISTIRABILIRSINIZ ;;;;;;;;;;;;;;;;;;;;;;;;;;
-;(format t "FoundChip:~a~%" (Code-Breaker *document* 'Gen-Decoder-B-0) )
+(format t "Found Plain Text:~a~%" (Code-Breaker *document* 'Gen-Decoder-B-0) )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 1-2 tane ufak test metodunu icerir ;;;;;;;
