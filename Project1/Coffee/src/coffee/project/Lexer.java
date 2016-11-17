@@ -47,13 +47,13 @@ public class Lexer implements REPL.LineInputCallback {
                     }
                     else throw new InvalidTokenException(token,i);
                 }
-                System.out.println(sb.toString());
+                System.out.println("Word: "+sb.toString());
                 TokenList.getInstance().addToken(new Identifier(sb.toString()));
             }else if(ch=='-'){
                 StringBuilder sb = new StringBuilder();
                 sb.append(ch);
                 if(i== token.length()-1){ // - den sonra item yoksa
-                    System.out.println("Operator - :"+sb.toString());
+                    System.out.println("Operator :"+sb.toString());
                     TokenList.getInstance().addToken(new Operator(sb.toString()));
                 }else {
                     for (int j = i + 1; j < token.length(); ++j) {
@@ -72,8 +72,13 @@ public class Lexer implements REPL.LineInputCallback {
             }else if(ch==')'){
                 StringBuilder sb = new StringBuilder();
                 sb.append(ch);
-                System.out.println("Operator: " + sb.toString());
-                TokenList.getInstance().addToken(new Operator(sb.toString()));
+                if(i== token.length()-1){ // - den sonra item yoksa
+                    System.out.println("Operator :"+sb.toString());
+                    TokenList.getInstance().addToken(new Operator(sb.toString()));
+                }else{ // ) sonra sadece ) gelebilir
+                    if(token.charAt(i+1)!=')')
+                        throw new InvalidTokenException(token,i+1);
+                }
             }else if(Character.isDigit(ch)){
                 StringBuilder sb = new StringBuilder();
                 sb.append(ch);
@@ -89,6 +94,25 @@ public class Lexer implements REPL.LineInputCallback {
                     System.out.println("Number: " + sb.toString());
                     TokenList.getInstance().addToken(new ValueInt(Integer.valueOf(sb.toString())));
                 }
+            }else if(ch=='+' || ch=='/' || ch=='*'){
+                StringBuilder sb = new StringBuilder();
+                sb.append(ch);
+                if(i== token.length()-1){ // - den sonra item yoksa
+                    System.out.println("Operator :"+sb.toString());
+                    TokenList.getInstance().addToken(new Operator(sb.toString()));
+                }else{ // ) sonra sadece ) gelebilir
+                    if(token.charAt(i+1)!=' ') // bu operatorlerden sonra bosluk gelmek zorunda
+                        throw new InvalidTokenException(token,i+1);
+                }
+            }else if(ch=='\''){ // ' operatoru
+                StringBuilder sb = new StringBuilder();
+                sb.append(ch);
+                if(i==token.length()-1 || token.charAt(i+1)!='(') { // ' dan sonra ( yoksa exception fırlat gitsiiin
+                    throw new InvalidTokenException(token, i);
+                }
+                sb.append("(");
+                System.out.println("Operator :"+sb.toString());
+                TokenList.getInstance().addToken(new Operator(sb.toString()));
             }
 
 
