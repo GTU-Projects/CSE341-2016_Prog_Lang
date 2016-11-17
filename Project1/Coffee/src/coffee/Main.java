@@ -36,7 +36,7 @@ public class Main {
             }
         }
 
-        REPL.repl(lexer);
+        //REPL.repl(lexer);
 
         System.out.println("Tokens:");
         TokenList tokens = TokenList.getInstance();
