@@ -19,4 +19,5 @@ public interface Keywords {
     public static final String ELSE = "else";
     public static final String TRUE = "true";
     public static final String FALSE = "false";
+    public static final String NULL = "null";
 }
