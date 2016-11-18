@@ -11,6 +11,7 @@ import coffee.syntax.Operators;
 
 /**
  * Created by ft on 10/14/15.
+ * Updated by Hasan MEN - 131044009
  */
 public class Lexer implements REPL.LineInputCallback {
 
@@ -29,7 +30,7 @@ public class Lexer implements REPL.LineInputCallback {
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
             e.printStackTrace();
-            return e.getMessage();
+            return null;
         }
     }
 
@@ -157,7 +158,9 @@ public class Lexer implements REPL.LineInputCallback {
             } else if (ch.equals(Operators.LEFT_PARENTHESIS)) { // acma parantez
                 TokenList.getInstance().addToken(new Operator(ch.toString()));
             } else if (ch.equals(Operators.RIGHT_PARENTHESIS)) { // kapama parantez
-                TokenList.getInstance().addToken(new Operator(ch.toString()));
+                if (i == token.length()-1 || token.charAt(i+1) == Operators.RIGHT_PARENTHESIS.charAt(0)) // ) den sonra sadece ) gelebilir
+                    TokenList.getInstance().addToken(new Operator(ch.toString()));
+                else throw new InvalidTokenException(token,i+1);
             } else if (ch.equals(Operators.PLUS) || ch.equals(Operators.ASTERISK) || ch.equals(Operators.SLASH)) {
                 if (i == token.length() - 1) { // bu op. lerden sonra sadece bosluk gelebilir yani sonda olmalılar
                     TokenList.getInstance().addToken(new Operator(ch.toString()));

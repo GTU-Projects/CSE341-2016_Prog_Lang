@@ -80,6 +80,8 @@ public final class REPL {
             if(line.equals("(quit)"))
                 return;
             prompt = callback.lineInput(line);
+            if(prompt==null)
+                return;
         }
     }
 

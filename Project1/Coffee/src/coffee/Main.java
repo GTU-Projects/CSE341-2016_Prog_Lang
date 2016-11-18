@@ -22,7 +22,9 @@ public class Main {
                 String line = null;
                 while ((line = br.readLine()) != null) {
                     System.out.println(line);
-                    lexer.lineInput(line);
+                    if(lexer.lineInput(line)==null){ // eger hata varsa devam etmene gerek yok
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 System.err.println("Unable to read file: "+args[0]);
@@ -36,7 +38,7 @@ public class Main {
             }
         }
 
-        //REPL.repl(lexer);
+        REPL.repl(lexer);
 
         System.out.println("Tokens:");
         TokenList tokens = TokenList.getInstance();
