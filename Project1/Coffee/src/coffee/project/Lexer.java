@@ -5,6 +5,7 @@ import coffee.REPL;
 import coffee.TokenList;
 import coffee.datatypes.*;
 import coffee.exceptions.InvalidTokenException;
+import coffee.exceptions.UnresolvedCharacterException;
 import coffee.syntax.Keywords;
 import coffee.syntax.Operators;
 
@@ -134,7 +135,7 @@ public class Lexer implements REPL.LineInputCallback {
      * @param token tokenleri ayrıstırılacak string
      * @throws InvalidTokenException tokenlerde hata varsa fırlatırılır
      */
-    private void parseToken(String token) throws InvalidTokenException {
+    private void parseToken(String token) throws InvalidTokenException, UnresolvedCharacterException {
         if (debugMode) System.out.println("parseToken is started");
 
         for (int i = 0; i < token.length(); ++i) {
@@ -163,7 +164,7 @@ public class Lexer implements REPL.LineInputCallback {
                 } else throw new InvalidTokenException(token, i + 1);
             } else if (ch.equals(Operators.NAIL)) { // ' operatoru
                 TokenList.getInstance().addToken(new Operator(ch.toString()));
-            }
+            } else throw new UnresolvedCharacterException(token, ch.charAt(0), i);
         }
     }
 }
