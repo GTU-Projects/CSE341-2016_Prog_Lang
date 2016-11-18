@@ -13,6 +13,6 @@ public class InvalidTokenException extends Exception {
     }
 
     public InvalidTokenException(String token, int index){
-        super("Invalid token in "+token+" at "+index+". index");
+        super("Invalid match found in "+token+" at "+index+".index");
     }
 }
