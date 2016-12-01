@@ -22,9 +22,7 @@ public class Main {
                 String line = null;
                 while ((line = br.readLine()) != null) {
                     System.out.println(line);
-                    if(lexer.lineInput(line)==null){ // eger hata varsa devam etmene gerek yok
-                        break;
-                    }
+                    lexer.lineInput(line); // TODO: eger devam edilmek istenmiosa return degere gore break olabilir
                 }
             } catch (Exception e) {
                 System.err.println("Unable to read file: "+args[0]);

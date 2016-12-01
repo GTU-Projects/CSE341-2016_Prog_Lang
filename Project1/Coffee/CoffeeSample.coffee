@@ -1,4 +1,4 @@
-(deffun sumup (x)
+(deffun2 sumup (x)
   (if (equal x 0)
   then 1
   else (+ x (sumup (- x 1)))

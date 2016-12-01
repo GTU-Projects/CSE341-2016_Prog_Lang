@@ -79,9 +79,7 @@ public final class REPL {
             line = getString(prompt);
             if(line.equals("(quit)"))
                 return;
-            prompt = callback.lineInput(line);
-            if(prompt==null)
-                return;
+            prompt = callback.lineInput(line); // TODO: return degerine gore break edilebilir
         }
     }
 
