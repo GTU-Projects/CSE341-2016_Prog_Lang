@@ -181,6 +181,7 @@ meet(X,Y):- enrol(X,C1),where(C1,P1),
 
 % 4.1
 
+add(L,L).
 
 % 4.2
 uniqueHelper([],L,L).
