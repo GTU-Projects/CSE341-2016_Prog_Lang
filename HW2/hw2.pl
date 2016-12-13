@@ -4,8 +4,8 @@
 %---------------%
 
 %facts : flight routes
-flight(istanbul,izmir).
 flight(istanbul,antalya).
+flight(istanbul,izmir).
 flight(istanbul,konya).
 flight(istanbul,gaziantep).
 flight(istanbul,ankara).
@@ -22,7 +22,7 @@ flight(erzincan,edremit).
 flight(izmir,istanbul).
 flight(izmir,ankara).
 
-flight(antalta,istanbul).
+flight(antalya,istanbul).
 
 flight(konya,istanbul).
 flight(konya,ankara).
@@ -40,6 +40,28 @@ flight(kars,istanbul).
 
 flight(trabzon,istanbul).
 flight(trabzon,ankara).
+
+
+connected(A,B):- flight(A,B); flight(B,A).
+foo(Place,Visited,X):-
+  flight(Place,Y),
+  not(member(Y,Visited)),
+  foo(Y,[Y|Visited],X),
+  X is Y.
+
+route(Place,X):-
+  foo(Place,[Place],X).
+
+path(A,B,Path) :-
+       travel(A,B,[A],Path).
+
+travel(A,B,P,[B|P]) :-
+       connected(A,B).
+travel(A,B,Visited,Path) :-
+       connected(A,C),
+       C \== B,
+       \+member(C,Visited),
+       travel(C,B,[C|Visited],Path).
 
 %---------------%
 %---  PART 2 ---%
@@ -101,30 +123,6 @@ getNextCity(X,Y,Old):-
   flight(X,Y),
   not(member(Y,Old)).
 
-
-path([B | Rest], B, [B | Rest], Length, Length).
-path([A | Rest], B, Path, CurrentLength, Length) :-
-    distance(A, C, X),
-    \+member(C, [A | Rest]),
-    NewLength is CurrentLength + X,
-    path([C, A | Rest], B, Path, NewLength, Length).
-
-find_paths(A, B) :-
-    path([A], B, Path, 0, Length),
-    printPath(Path),
-    writef(' with evaluation %d\n', [Length]),
-    fail.
-
-path1(A,B,Q) :-
-       travel(A,B,[A],Q).
-
-travel(A,B,P,[B|P]) :-
-       flight(A,B).
-travel(A,B,Visited,Path) :-
-       flight(A,C),
-       C \== B,
-       \+member(C,Visited),
-       travel(C,B,[C|Visited],Path).
 
 
 
