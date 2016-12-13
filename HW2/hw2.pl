@@ -84,7 +84,6 @@ distance(trabzon,istanbul,902).
 distance(trabzon,ankara,593).
 
 
-
 % a predicate indicating there exist a route between X and Y if there is
 % flight between X and Y
 
@@ -153,10 +152,10 @@ enrol(d,341).
 enrol(e,455).
 
 % 3.1
-schedule(X,P,T):- enrol(X,P), when(P,T).
+schedule(X,P,T):- enrol(X,C),where(C,P), when(C,T).
 
 % 3.2
-usage(R,T):- where(T,R).
+usage(P,T):- where(C,P), when(C,T).
 
 % 3.3
 confClass(X,Y):- where(X,A),
@@ -181,7 +180,8 @@ meet(X,Y):- enrol(X,C1),where(C1,P1),
 
 % 4.1
 
-add(L,L).
+add([],0).
+add([H|T],L2):- add(T,L3), L2 is H+L3.
 
 % 4.2
 uniqueHelper([],L,L).
@@ -198,7 +198,11 @@ unique(List,Set):-
 
 % 4.3
 
+appendList([],L2,L2).
+appendList([H|T],L2,[H|L3]):- appendList(T,L2,L3).
+flatten(L1,L2):- appendList([L1],[],L2).
 
+%flatten(L1,[L1]). buda bir diger cozum
 
 
 
