@@ -1,4 +1,6 @@
-% Prolog HW2 - HASAN MEN 131044009
+% CSE341 Programming Languages HW2 - Prolog
+% HASAN MEN 131044009
+
 %---------------%
 %---  PART 1 ---%
 %---------------%
@@ -41,27 +43,9 @@ flight(kars,istanbul).
 flight(trabzon,istanbul).
 flight(trabzon,ankara).
 
-
-connected(A,B):- flight(A,B); flight(B,A).
-foo(Place,Visited,X):-
-  flight(Place,Y),
-  not(member(Y,Visited)),
-  foo(Y,[Y|Visited],X),
-  X is Y.
-
-route(Place,X):-
-  foo(Place,[Place],X).
-
-path(A,B,Path) :-
-       travel(A,B,[A],Path).
-
-travel(A,B,P,[B|P]) :-
-       connected(A,B).
-travel(A,B,Visited,Path) :-
-       connected(A,C),
-       C \== B,
-       \+member(C,Visited),
-       travel(C,B,[C|Visited],Path).
+% bir sehirden yola cıkarak gidilecek sehirleri verir
+route(A,B):- flight(A,B),flight(B,A).
+route(A,B):- flight(A,C), flight(C,B), not(C ==B).
 
 %---------------%
 %---  PART 2 ---%
@@ -112,18 +96,26 @@ distance(trabzon,ankara,593).
 addList([],L,L).
 addList(Element,L,[Element|L]).
 
-getEmptyList([]).
-getListCopy(L,L).
-
 member(X,[X|_]).
 member(X,[_|Tail]):- member(X,Tail).
 
+sroute(A,B,D) :-
+       travel(A,B,[A],P,D),
+       write(P).
 
-getNextCity(X,Y,Old):-
-  flight(X,Y),
-  not(member(Y,Old)).
+travel(A,B,P,[B|P],D) :-
+       %write('travel1'),
+       flight(A,B),
+       distance(A,B,D),!.
 
-
+travel(A,B,Visited,Path,D) :-
+       %write('travel2'),
+       flight(A,C),
+       C \== B,
+       \+member(C,Visited),
+       distance(A,C,Old),
+       travel(C,B,[C|Visited],Path,D2),
+       D is Old+ D2.
 
 
 %---------------%
@@ -139,8 +131,8 @@ when(452,17).
 where(102,z23).
 where(108,z11).
 where(341,z06).
-where(455,z07).
-where(452,z07).
+where(455,207).
+where(452,207).
 
 enrol(a,102).
 enrol(a,108).
@@ -150,12 +142,15 @@ enrol(d,341).
 enrol(e,455).
 
 % 3.1
+% ogrencinin sinif ve ders saatini verir
 schedule(X,P,T):- enrol(X,C),where(C,P), when(C,T).
 
 % 3.2
+% girilen sınıf icin ders suresini verir
 usage(P,T):- where(C,P), when(C,T).
 
 % 3.3
+% sınıf ve ya zaman cakismasini kontrol eder
 confClass(X,Y):- where(X,A),
                 where(Y,B),
                 A==B.
@@ -163,25 +158,30 @@ confClass(X,Y):- where(X,A),
 confTime(X,Y):-  when(X,A),
                  when(Y,B),
                  A == B.
-conflict(X,Y):- not((not(confClass(X,Y)),not(confTime(X,Y)))).
+conflict(X,Y):- not((not(confClass(X,Y)),
+                     not(confTime(X,Y)))).
 
 
 % 3.4
+% iki ogrenci sınıf ve zaman olarak karsilasiyor mu?
+
 meet(X,Y):- enrol(X,C1),where(C1,P1),
             enrol(Y,C2),where(C2,P2),
             C1==C2,P1==P2,!.
-
 
 %---------------%
 %---  PART 4 ---%
 %---------------%
 
 % 4.1
+% This predicates adds all elements of a list and binds result to second parameter
 
 add([],0).
 add([H|T],L2):- add(T,L3), L2 is H+L3.
 
 % 4.2
+% This part takes a list and return new list which doesn't include recurrent element
+
 uniqueHelper([],L,L).
 
 uniqueHelper([H|T],L1,L2):-
@@ -191,38 +191,18 @@ uniqueHelper([H|T],L1,L2):-
 uniqueHelper([H|T],L1,L2):-
   uniqueHelper(T,[H|L1],L2).
 
-unique(List,Set):-
-  uniqueHelper(List,[],Set),!.
+unique(List,UList):-
+  uniqueHelper(List,[],UList),!.
 
 % 4.3
-
+% This part takes a list, include lists then flats the main list
 appendList([],L2,L2).
 appendList([H|T],L2,[H|L3]):- appendList(T,L2,L3).
-flatten(L1,L2):- appendList([L1],[],L2).
 
-%flatten(L1,[L1]). buda bir diger cozum
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%
+flatten([], []) :- !. % cut backtracking
+flatten([H|T], List) :- !,
+    %cut backtrac and just return new lists
+    flatten(H, ListH),
+    flatten(T, ListT),
+    appendList(ListH, ListT, List).
+flatten(L, [L]).
