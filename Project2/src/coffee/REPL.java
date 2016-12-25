@@ -1,5 +1,7 @@
 package coffee;
 
+import coffee.exceptions.InvalidTokenException;
+import coffee.exceptions.UnresolvedCharacterException;
 import coffee.project.Parser;
 
 import java.io.File;
@@ -72,7 +74,6 @@ public final class REPL {
             }
         });
 
-
         System.out.println(HELLO);
 
         String line;
@@ -84,9 +85,10 @@ public final class REPL {
                 break;
             try {
                 prompt = callback.lineInput(line);
-            } catch (InvalidSyntaxException exc) {
+            } catch (InvalidTokenException | UnresolvedCharacterException exc) {
                 System.err.println("Invalid syntax!");
                 exc.printStackTrace();
+                return; // exit, when exception thrown
             }
         }
 
@@ -104,9 +106,7 @@ public final class REPL {
          * @param line User input
          * @return Prompt or null
          */
-        public String lineInput(String line) throws InvalidSyntaxException;
+        public String lineInput(String line) throws InvalidTokenException, UnresolvedCharacterException;
     }
 
-    public static class InvalidSyntaxException extends Exception {
-    }
 }

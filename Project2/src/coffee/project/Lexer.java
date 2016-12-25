@@ -21,20 +21,14 @@ public class Lexer implements REPL.LineInputCallback {
     private boolean debugMode = false;
 
     @Override
-    public String lineInput(String line) {
-        try {
-            String[] splits = line.split(" ");
-            for (String itr : splits) {
-                if (debugMode) System.out.println("ParseString :" + itr);
-                parseToken(itr);
-            }
-            if (debugMode) System.out.println("--------------------------");
-            return "successful";
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
-            e.printStackTrace();
-            return null;
+    public String lineInput(String line) throws InvalidTokenException, UnresolvedCharacterException {
+        String[] splits = line.split(" ");
+        for (String itr : splits) {
+            if (debugMode) System.out.println("ParseString :" + itr);
+            parseToken(itr);
         }
+        if (debugMode) System.out.println("--------------------------");
+        return "successful";
     }
 
     /**
@@ -133,7 +127,7 @@ public class Lexer implements REPL.LineInputCallback {
     }
 
     /**
-     * Be metod kendisine gelen stringi parse ederek, icindeki tokenleri bulur
+     * Bu metod kendisine gelen stringi parse ederek, icindeki tokenleri bulur
      * Bulunan tokenler tokenliste eklenir
      *
      * @param token tokenleri ayrıstırılacak string
@@ -168,8 +162,14 @@ public class Lexer implements REPL.LineInputCallback {
                 if (i == token.length() - 1) { // bu op. lerden sonra sadece bosluk gelebilir yani sonda olmalılar
                     TokenList.getInstance().addToken(new Operator(ch.toString()));
                 } else throw new InvalidTokenException(token, i + 1);
-            } else if (ch.equals(Operators.NAIL)) { // ' operatoru
-                TokenList.getInstance().addToken(new Operator(ch.toString()));
+            } else if (ch.charAt(0)=='\'') { // ' operatoru
+                if(i!= token.length()-1){ // ' den sonra karakter var mı?
+                    ch+=token.charAt(i+1);
+                    if(ch.equals(Operators.CONS)){
+                        TokenList.getInstance().addToken(new Operator(ch.toString()));
+                        ++i;
+                    }else throw new InvalidTokenException(token,i);
+                }else throw new InvalidTokenException(token,i);
             } else throw new UnresolvedCharacterException(token, ch.charAt(0), i);
         }
     }
