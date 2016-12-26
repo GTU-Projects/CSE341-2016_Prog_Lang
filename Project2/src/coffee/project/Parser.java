@@ -4,6 +4,7 @@ import coffee.IdentifierList;
 import coffee.TokenList;
 import coffee.datatypes.*;
 
+import java.util.Collections;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,26 +26,33 @@ public class Parser {
     private final String EXPB_WHILE="(\\(while \\(EXPB\\) EXPLISTI\\))";
     private final String EXPB_FOR="(\\(for \\(Id EXPI EXPI\\) EXPLISTI\\))";
     private Matcher matcher;
-    private Stack<String> stack = new Stack<>();
+    private Stack<String> reducedStack = new Stack<>();
+    private Stack<Token> tokenStack = new Stack<>();
 
-    public Parser(){
 
-    }
+    public Parser(){}// TODO: belki patternler buraya gelebilir
 
     public void parse() {
         IdentifierList identifierList = IdentifierList.getInstance();
         TokenList tokenList = TokenList.getInstance();
 
-        boolean res = canReduce("(/ EXPI EXPI)",EXPI_EXPRESSION);
+
+        tokenStack.addAll(tokenList.getAllTokens());
+        Collections.reverse(tokenStack);
+
+        System.out.println("Token Stack:"+tokenStack);
+        while(!tokenStack.empty()){
+            // eger stack reduce edilebilir ise reduce et
+            reduceStack();
+            reducedStack.push(tokenStack.pop().getTokenVal());
+            System.out.println("Stack : "+reducedStack.toString());
+        }
+        /*boolean res = canReduce("(/ EXPI EXPI)",EXPI_EXPRESSION);
         boolean res2 = canReduce("(or EXPB EXPB)",EXPB_EXPRESSION);
-        System.out.println("Res1:"+res+" Res2:"+res2);
+        System.out.println("Res1:"+res+" Res2:"+res2);*/
 
-        for(Token t: tokenList.getAllTokens()){
-
+        /*for(Token t: tokenList.getAllTokens()){
             String item=null;
-
-            System.out.println("Parse Stack:"+stack.toString());
-
             if(t instanceof Operator)
                 item = ((Operator)t).getOperator();
             else if (t instanceof Keyword)
@@ -56,6 +64,21 @@ public class Parser {
             else if(t instanceof ValueInt)
                 item=((ValueInt)t).getValue().toString();
             stack.push(item);
+            //System.out.println("Parse Stack:"+stack.toString());
+        }*/
+    }
+
+    private void reduceStack(){
+        // eger bos ise direk don ve elemanı eklet
+        if(reducedStack.empty())
+            return;
+
+        String pk = reducedStack.peek();
+        if(canReduce(pk,EXPI_EXPRESSION)){
+            String temp = "EXPI";
+            reducedStack.pop();
+            reducedStack.push(temp);
+            System.out.println("New Stack:"+reducedStack.toString());
         }
     }
 

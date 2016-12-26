@@ -33,4 +33,9 @@ public class Operator implements Token{
     public String toString() {
         return getTokenName()+"_"+getOperator();
     }
+
+    @Override
+    public String getTokenVal(){
+        return getOperator();
+    }
 }

@@ -33,4 +33,10 @@ public class Identifier implements Token{
     public String toString() {
         return getTokenName()+"_"+getName();
     }
+
+
+    @Override
+    public String getTokenVal(){
+        return getName();
+    }
 }

@@ -36,4 +36,9 @@ public class ValueBinary implements Value {
     public String toString() {
         return getTokenName()+"_"+getValue();
     }
+
+    @Override
+    public String getTokenVal(){
+        return getValue().toString();
+    }
 }

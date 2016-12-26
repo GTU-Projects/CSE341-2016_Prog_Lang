@@ -36,4 +36,8 @@ public class Keyword implements Token {
     public String toString() {
         return getTokenName()+"_"+getKeyword();
     }
+
+    public String getTokenVal(){
+        return getKeyword();
+    }
 }

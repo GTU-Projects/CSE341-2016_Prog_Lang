@@ -24,4 +24,6 @@ public interface Token {
 
     public Type getTokenType();
 
+    public String getTokenVal();
+
 }
