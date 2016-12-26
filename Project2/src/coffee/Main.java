@@ -2,6 +2,7 @@ package coffee;
 
 import coffee.datatypes.Token;
 import coffee.project.Lexer;
+import coffee.project.Parser;
 
 import java.io.*;
 
@@ -24,6 +25,9 @@ public class Main {
                     System.out.println(line);
                     lexer.lineInput(line);
                 }
+                // TODO: Burası silinecek
+                Parser parser = new Parser();
+                parser.parse();
             } catch (Exception e) {
                 System.err.println("Unable to read file: "+args[0]);
             } finally {
@@ -36,13 +40,13 @@ public class Main {
             }
         }
 
-        REPL.repl(lexer);
-
-        System.out.println("Tokens:");
-        TokenList tokens = TokenList.getInstance();
-        for(Token token : tokens.getAllTokens()) {
-            System.out.println(token);
-        }
+       // REPL.repl(lexer);
+//
+//        System.out.println("Tokens:");
+//        TokenList tokens = TokenList.getInstance();
+//        for(Token token : tokens.getAllTokens()) {
+//            System.out.println(token);
+//        }
     }
 
     private static void usage() {
