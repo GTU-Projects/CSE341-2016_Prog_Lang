@@ -25,7 +25,7 @@ public class Main {
                     System.out.println(line);
                     lexer.lineInput(line);
                 }
-                // TODO: Burası silinecek
+
                 Parser parser = new Parser();
                 parser.parse();
             } catch (Exception e) {
@@ -42,6 +42,7 @@ public class Main {
 
        // REPL.repl(lexer);
 //
+        // TODO: Burası silinecek
 //        System.out.println("Tokens:");
 //        TokenList tokens = TokenList.getInstance();
 //        for(Token token : tokens.getAllTokens()) {

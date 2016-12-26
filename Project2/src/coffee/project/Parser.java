@@ -16,22 +16,25 @@ import java.util.regex.Pattern;
 public class Parser {
     // Parses the lexer result and prints *ONLY* the parsing result.
 
-    private final String EXPI_EXPRESSION = "(\\((\\+|\\-|\\*|\\/) EXPI EXPI\\))|(Id)|(IntegerValue)|(\\(Id EXPLISTI\\))";
-    private final String EXPB_EXPRESSION = "(\\((and|or|equal) EXPB EXPB\\)|\\(equal EXPI EXPI\\)|BinaryValue|\\(not EXPB\\))";
-    private final String EXPLISTI = "(\\(concat EXPLISTI EXPLISTI\\)|\\(append EXPI EXPLISTI\\)|LISTVALUE|null)";
-    private final String EXPI_ASSINGMENT = "(\\(set Id EXPI\\))";
-    private final String EXPI_FUNC = "(\\(deffun Id IDLIST EXPLISTI\\))";
+    private final String EXPI_EXPRESSION = "(\\(\\s*(\\+|\\-|\\*|\\/) EXPI EXPI\\s*\\))|(Id)|(IntegerValue)|(\\(\\s*Id EXPLISTI\\s*\\))";
+    private final String EXPB_EXPRESSION = "(\\(\\s*(and|or|equal) EXPB EXPB\\s*\\)|\\(\\s*equal EXPI EXPI\\s*\\)|BinaryValue|\\(\\s*not EXPB\\s*\\))";
+    private final String EXPLISTI = "(\\(\\s*concat EXPLISTI EXPLISTI\\s*\\)|\\(\\s*append EXPI EXPLISTI\\s*\\)|LISTVALUE|null)";
+    private final String EXPI_ASSINGMENT = "(\\(\\s*set Id EXPI\\s*\\))";
+    private final String EXPI_FUNC = "(\\(\\s*deffun Id IDLIST EXPLISTI\\s*\\))";
     private final String EXPI_IDLIST = "empty"; // TODO: EMPTY
-    private final String EXPI_FUNC_CALL = "(\\(Id EXPLISTI\\))";
-    private final String EXPI_IF = "(\\(if EXPB (then EXPLISTI else EXPLISTI|EXPLISTI|EXPLISTI EXPLISTI)\\))";
-    private final String EXPB_WHILE = "(\\(while \\(EXPB\\) EXPLISTI\\))";
-    private final String EXPB_FOR = "(\\(for \\(Id EXPI EXPI\\) EXPLISTI\\))";
-    private Matcher matcher;
+    private final String EXPI_FUNC_CALL = "(\\(\\s*Id EXPLISTI\\s*\\))";
+    private final String EXPI_IF = "(\\(\\s*if EXPB (\\s*then EXPLISTI else EXPLISTI|EXPLISTI|EXPLISTI EXPLISTI\\s*)\\))";
+    private final String EXPB_WHILE = "(\\(\\s*while \\(\\s*EXPB\\\\s*) EXPLISTI\\s*\\))";
+    private final String EXPB_FOR = "(\\(\\s*for \\(\\s*Id EXPI EXPI\\s*\\) EXPLISTI\\s*\\))";
+
     private Stack<String> reducedStack = new Stack<>();
     private Stack<Token> tokenStack = new Stack<>();
 
+
     IdentifierList identifierList = IdentifierList.getInstance();
     TokenList tokenList = TokenList.getInstance();
+
+    private Stack<String> output = new Stack<>();
 
     public Parser() {
     }// TODO: belki patternler buraya gelebilir
@@ -42,17 +45,44 @@ public class Parser {
         tokenStack.addAll(tokenList.getAllTokens());
         Collections.reverse(tokenStack);
 
+        stackTOStr(tokenStack);
+
         System.out.println("Token List:" + tokenList.getAllTokens());
         System.out.println("Token Stack:" + tokenStack);
-        int i = 0;
+
+        StringBuilder sb1 = new StringBuilder();
+
         while (!tokenStack.empty()) {
+            StringBuilder sb2 = new StringBuilder();
             // eger stack reduce edilebilir ise reduce et
-            reduceStack(i - 1);
-            reducedStack.push(tokenStack.pop().getTokenVal());
-            System.out.println("Stack : " + reducedStack.toString());
-            ++i;
+            sb2.append(sb1);
+            System.out.println("sb21:"+sb2.toString());
+            Token token = tokenStack.pop();
+            sb2.append(token.getTokenVal());
+            System.out.println("sb22"+sb2.toString());
+            output.push(sb2.toString());
+
+            if (token instanceof Identifier) {
+                reducedStack.push("Id");
+                sb1.append("Id");
+                output.push(sb1.toString());
+            } else if (token instanceof ValueBinary) {
+                reducedStack.push("BinaryValue");
+                sb1.append("BinaryValue");
+                output.push(sb1.toString());
+            } else if (token instanceof ValueInt) {
+                reducedStack.push("IntegerValue");
+                sb1.append("IntegerValue");
+                output.push(sb1.toString());
+            } else {
+                reducedStack.push(token.getTokenVal());
+            }
+            
+            reduceStack();
+
         }
-        reduceStack(i-1);
+
+        System.out.println("\nResStack:"+output.toString());
         /*boolean res = canReduce("(/ EXPI EXPI)",EXPI_EXPRESSION);
         boolean res2 = canReduce("(or EXPB EXPB)",EXPB_EXPRESSION);
         System.out.println("Res1:"+res+" Res2:"+res2);*/
@@ -74,38 +104,42 @@ public class Parser {
         }*/
     }
 
-    private void reduceStack(int index) {
+    private void reduceStack() {
         // eger bos ise direk don ve elemanı eklet
-        System.out.println("ReduceStack Index:" + index);
 
         try {
-
-            if (reducedStack.empty())
-                return;
-
-            String pk = reducedStack.peek();
-            System.out.println("Pk:"+pk);
-            if (tokenList.getAllTokens().get(index) instanceof Identifier) {
+            String peek = reducedStack.peek();
+            System.out.println("Peek:" + peek);
+            if (peek.equals("Id") || peek.equals("IntegerValue")) {
                 //System.out.println(tokenList.getAllTokens().get(index)+pk);
                 reducedStack.pop();
-                reducedStack.push("Id");
-            } else if (pk.equals(")")) {
+                reducedStack.push("EXPI");
+            } else if (peek.equals("BinaryValue")) {
+                reducedStack.pop();
+                reducedStack.push("EXPB");
+            } else if (peek.equals(")")) {
                 // ( '( e kadar stackten cek, yoksa EXCEPTIOOOON
                 // exception fırlatabilir
-                StringBuilder sb=new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 while (!reducedStack.peek().equals("(") || reducedStack.peek().equals("'(")) {
-                    sb.insert(0,reducedStack.pop().toString());
+                    sb.insert(0, reducedStack.pop().toString());
+                    sb.insert(0," ");
                 }
-                System.out.println("Paranthesis SB:"+sb.toString());
+                sb.insert(0, reducedStack.pop().toString());
+                System.out.println("ReducedStackLast:"+reducedStack.toString());
+                System.out.println("Paranthesis SB:" + sb.toString());
+
+                if (canReduce(sb.toString(), EXPI_EXPRESSION)) {
+                    reducedStack.push("EXPI");
+                    //System.out.println("New Stack:" + reducedStack.toString());
+                }else if (canReduce(sb.toString(), EXPB_EXPRESSION)) {
+                    reducedStack.push("EXPB");
+                    //System.out.println("New Stack:" + reducedStack.toString());
+                }
 
             }
 
-            if (canReduce(pk, EXPI_EXPRESSION)) {
-                String temp = "EXPI";
-                reducedStack.pop();
-                reducedStack.push(temp);
-                System.out.println("New Stack:" + reducedStack.toString());
-            }
+
         } catch (EmptyStackException e) {
             System.err.println("Stackte acma parantez bulunamadı kocumm");
         }
@@ -123,5 +157,14 @@ public class Parser {
         Pattern r = Pattern.compile(pattern);
         Matcher matcher = r.matcher(str);
         return matcher.find();
+    }
+
+    private String stackTOStr(Stack<Token> stack){
+
+        System.out.println(stack.peek());
+        for(Token token: stack){
+            System.out.println(token.getTokenVal());
+        }
+        return "";
     }
 }
